@@ -32,9 +32,10 @@ About
 	versatile than RegEnv).
 
 	Why yet another setenv utility? Because I (even in 2012!) still 
-	couldn't find a single command-line tool with all the critically 
-	important features I needed, and with a (i) well-documented and 
-	(ii) script-friendly interface, plus (iii) source code. 
+	couldn't find a single command-line tool with (1) all the features 
+	that have been important to a "CLI-style" developer like me, with
+	a (2) well-documented and (3) script-friendly interface, plus (4)
+	open sources.
 	
 	Jonathan Wilkes' SetEnv came closest, so I forked that one.
 
