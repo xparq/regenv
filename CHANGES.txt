@@ -57,12 +57,20 @@ Later:
 DONE:
 =====
 
+2014-02-19: 0.94+2
+. Gitified locally, and created regenv-win32 on Githu). 
+  Started moving to git, but currently the new local GIT repo and the old 
+  manual fs tree still co-exist. Not synced with Github yet.
+
+-> Still all this is just preparations for continuing to investigate the 
+   PATH buffer overflow crash [path-crash].
+
 2014-02-19:
 . Uploaded to GitHub, as regenv-win32.
 . [github-doc-update]
   Some refreshing of the docs (reconciled change history, licenses and readme).
-. Renaming to winenv to regenv. (I can't remember now why I aborted this 
-  rename earlier; let's se... ;) )
+. Renaming from winenv to regenv. (I can't remember now why I aborted this 
+  rename earlier, if at all attempted; we'll se... :) )
 
 2013-04-9 - 0.94:
 . Changed the prj dir name from setenv to winenv.
