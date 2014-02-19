@@ -19,7 +19,7 @@ About
 	Whenever you launch a console with a shell (and then any program
 	from there), its set of environment variables are ultimately (and 
 	in slightly cumbersome ways) affected (and sometimes, curiously, 
-	_not_ affected) by those set permanently (or for the time of a 
+	_not_ affected) by the ones set permanently (or for the time of a 
 	login session) in the Registry.
 	
 	These variables are beyond the reach of the "SET" shell command,
