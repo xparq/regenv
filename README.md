@@ -68,7 +68,8 @@ License
 More
 
 	If you have anything to say, please send an e-mail to "lunakid" at the...
-	you know which search provider that runs a nice email service too. ;)
+	you know which search provider that runs a nice email service too, and is
+	not Yahoo. ;)
 
 	For the original SetEnv tool, Jonathan published an excellent article on 
 	CodeProject: http://www.codeproject.com/Articles/12153/SetEnv
