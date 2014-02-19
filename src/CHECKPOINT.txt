@@ -1,7 +1,5 @@
 -----------------
-! Must pass this test case before continuing the development:
-
-P:\win32_\generic\winenv\...
+! Must pass this test case before continuing:
 
 build-vc.cmd
 
