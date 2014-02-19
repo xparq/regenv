@@ -58,7 +58,7 @@ DONE:
 =====
 
 2014-02-19: 0.94+2
-. Gitified locally, and created regenv-win32 on Githu). 
+. Gitified locally, and created regenv-win32 on Github. 
   Started moving to git, but currently the new local GIT repo and the old 
   manual fs tree still co-exist. Not synced with Github yet.
 
