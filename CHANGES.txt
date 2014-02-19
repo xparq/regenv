@@ -59,6 +59,8 @@ DONE:
 
 2014-02-19: 
 . Renamed local ref to the remote Github repo from "origin" to "github".
+  ! But something is wrong: local repo is "ahead of github by 1 commit",
+    yet i cannot push or merge upstream (everything is up to date!).
 . Turned off local manual version labelling (just using GIT for now).
 . Some care for the remains of the old SetEnv sources (in src/.old).
 
