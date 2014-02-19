@@ -1,15 +1,15 @@
 -----------------
-winenv test case:
+! Must pass this test case before continuing the development:
 
 P:\win32_\generic\winenv\...
 
 build-vc.cmd
 
-set kaka=xx;pisi
-run-vc set kaka=xx;pisi
-run-vc set -s kaka pisi
-set kaka
+set aaa=xx;zzzz
+run-vc set aaa=xx;zzzz
+run-vc set -s aaa zzzz
+set aaa
 
-(See the winenv/CHANGES.txt!)
-
------------------
+------------------
+(See CHANGES.txt!)
+------------------

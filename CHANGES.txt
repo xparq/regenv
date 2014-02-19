@@ -57,6 +57,10 @@ Later:
 DONE:
 =====
 
+2014-02-19: 
+. Turned off local manual version labelling (just using GIT for now).
+. Some care for the remains of the old SetEnv sources (in src/.old).
+
 2014-02-19: 0.95
 . Local builds succeed with the new (regenv) file names.
 . Git repo pushed up to Github.
