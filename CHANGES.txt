@@ -1,0 +1,149 @@
+TODO:
+=====
+
+! Make "notify Windows" the default behavior (I myself regularly forget to 
+  do it explicitly, not understanding then why winenv "does not work"...)
+
+< 1.0:
+! [path-crash]
+  FIX a crash when doing `winenv -nUV set CRAP poo%CRAP%` and/or then winenv -s CRAP
+  - When %SZ_SYS_TOOLS_DIR%\winenv -nUV set PATH C:\sz\core\sw\live\_HOST_\Windows\XP;%PATH%
+    was commented out in user-init.cmd, the each subsequent winenv -s PATH calls crashed. 
+  - When NOT commented out, only this call crashed, but not the -s ones.
+  - Doing `winenv -nUV set CRAP poo%NOT_CRAP%` also didn't crash.
+  ? PATH growing off some fixed buffer? Seems to be an overflow, as the new 
+    value is 519 bytes...
+
+! Update option names according to the /? spec.
+! Merge -d into -s!
+! Implement the 'check' action.
+! Implement the 'show' action. (Is it actually different from a "get"?)
+! Add a 'get' action, too, for completeness. (Even if doesn't make too much sense,
+  it's easier for those who see winenv -? for the first time. Also, it does make
+  sense for seeing how the variables actually look like in the registry.)
+! Factor out all the Win dependencies into a separate module.
+! Rething the -l -a -p options and SET/DEL/CHECK logic for more explicit 
+  behavior (and the implied extra flexibility).
+! Add & refine examples.
+
+Later:
+! Add automatic version tag to the executable.
+
+- Devenv: add command "set_compiler" for VC/GCC switching. 
+  1. This command should just instruct setting the tool name in the custom
+  section of PROJECT.ini.
+  2. The other commands (build, run, test etc.) should use this env. var
+  accordingly.
+  3. Standardize the compiler name tags?...
+
+- Del needs an option to delete plain substring, like SET has adding
+  plain substring... This whole substring crap is crying for regexp!
+
+- Although there is -x to force REG_EXPAND_SZ, there is no option for 
+  the reverse change (from REG_EXPAND_SZ to REG_SZ).
+  (The variable must be deleted first, and then setting it again without
+  -x will (re()create it as REG_SZ (by default).)
+
+- Add GPL2 to WinEnv-LICENSE.txt.
+
+- Revamp the ANSI/UNICODE crap (wcout, TCHAR, _T, LPSTR, LPBYTE etc.).
+  (I messed it all up for my initial version just to quickly get rid of the
+  original Xfc (output) module.)
+  Could the tool be completely orthogonal to this whole encoding problem?
+
+- Itertion support for -l.
+
+
+DONE:
+=====
+
+2014-02-19:
+. Uploaded to GitHub, as regenv-win32.
+. [github-doc-update]
+  Some refreshing of the docs (reconciled change history, licenses and readme).
+. Renaming to winenv to regenv. (I can't remember now why I aborted this 
+  rename earlier; let's se... ;) )
+
+2013-04-9 - 0.94:
+. Changed the prj dir name from setenv to winenv.
+. Added .prj-tools (0.11) to the dev. env.
+. Added dbg.h, changed old cerr<< output to DBG (also remved leftover, 
+  forgotten debug prints from DoDel()...).
+. Replace "options.find('x') != options.end()" with OPTION('x'), and
+          "options.find('x') == options.end()" with NO_OPTION('x').
+. Added ListPart.h with the common decls. for the XxxListPart modules;
+  also renamed PATH_SEPARATOR (';') to ELEMENT_SEPARATOR (as PATH_SEPARATOR
+  could be confused with the '/' separators in paths...).
+. Fix the MAX_PATH(?) overrun... To reproduce the error (NOT ALWAYS POSSIBLE!): 
+  1.) Open the Startup folder in Explor and punch Enter on the init.cmd icon 5 times.
+  3.) DBG showed "regkey.CheckValue_STR() --> status = 0", just before
+   "UPDATING EXISTING LIST VAR..." and then the crash.
+  4.) Should test if it is possible to add a subvalue to a list var when the
+   subvalue is itself a compound string (a list value)... 
+  5.) Can (4) cause errors? (NOTE: while the first crash seems to follow such a case
+   (of (4)), the second doesn't (it just tries adding a plain path component).
+  6.) After the crash (3) happens, just a mere "winenv -s PATH x" would also crash.
+   Can see the the PATH variable with Regedit, at: HKEY_CURRENT_USER\\Volatile Environment.
+  . According to a successfully cought crash debug run, the problem seems
+    to be in FindListPart. This is where it crashes in AddListPart:
+	if (FindListPart(sample_in, newpart_in, list_type, 0) != string::npos)	
+  . NOTE: as I'm just using std::strings, the issue may be in Microsoft's STL.
+    It also did not crash when compiled with GCC. (But not really tested either...)
+  . The crash is actually not solved, but blocked now, by amending FindListPart so
+    it no longer allows duplicate-setting the same elements (like paths).
+    However, to call it "solved", I should have investigated and understood it 
+    fully instead of working it around.
+
+0.93:
+. Use my StupidRegKey stuff.
+. Added the del action.
+
+0.92:
+. Started adding my own lightwieght RegKey class.
+. Extracted the help text out to a separate file.
+
+0.91:
+. NULL-termination is NOT guarenteed by RegQueryValue - use GetValue!!!
+	RegGetValue is not available on XP.
+	Just added the manual \0 treatment instead.
+
+. Disambiguate "winenv xxxx" to mean "winenv show xxxx" instead of
+  "ERROR: unknown command 'xxxx'"?
+
+  CAUTION: 
+	The whole idea of the implicit 'show' command is probably
+	flawed!
+
+	If a script does FOR %VAR in (vars) do winenv %VAR, 
+	it will break as soon as %VAR is equal to any of the 
+	Winenv commands (show, check, notify)!
+
+	Just make 'show' explicit and keep smiling!
+
+
+2012-Jun-26: ("1.1-luna") - Major & incompatible changes to SetEnv
+- Added support for session variables.
+  (HKCU/VolatileEnviornent, with a UNIX shell-like semantics).
+- Normalized the command-line switches (to be orthogonal & extendable)
+- Removed the '%value' feature (can do most of it from the shell with 
+  more flexibility, and escaping % (^%) also allows delayed expansion).
+- Updated outdated & replaced confusing text here and there.
+- Removed the installer.
+- Renamed the executable to winenv.exe (to remind of the env command 
+  on UNIX, although the two are still vastly different).
+- Removed Win9x AUTOEXEX.BAT support. (I cannot test it anyway.)
+
+
+The old SetEnv change history (mostly irrelevant for the current codebase):
+
+	1.09 [Fix] - (Feb  9, 2008) - Fixed a problem on Windows 98 where it sometimes failed to open the Autoexec.bat file.
+	1.08 [New] - (May 31, 2007) - Added how to delete a USER environment variable to the usage information.
+	1.07 [Fix] - (Jan 25, 2007) - Fixed a bug found by depaolim.
+	1.06 [New] - (Jan 14, 2007) - Added dynamic expansion support (same as using ~ with setx)
+		- Originally requested by Andre Amaral, further Request by Synetech
+	1.05 [New] - (Sep 06, 2006) - Added support to prepend (rather than append) a value to an expanded string 
+		- Requested by Masuia
+	1.04 [New] - (May 30, 2006) - Added support for User environment variables.
+	1.03 [Fix] - (Apr 20, 2006) - Bug fix in ProcessWinXP() discovered by attiasr 
+	1.01 [Fix] - (Nov 15, 2005) - Bug fix in IsWinME() discovered by frankd 
+	1.00 [New] - (Oct 29, 2005) - Initial Public Release.

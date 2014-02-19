@@ -1,0 +1,967 @@
+===================================================================[STICKY]==
+
+	Please don't use versions prior to 0.12. (It has fixed several 
+	critical regressions introduced in 0.1. It also contains various
+	other fixes and improvements.)
+
+	WARNING: 0.1-0.11 are seriously broken.
+
+	WARNING: 0.09 has introduced WSH dependency (using JScript).
+
+	WARNING: 0.07 has changed the project interface:
+		- renamed "pack" to "save"
+		- renamed PROJECT_NAME to PROJECT_TAG
+	WARNING: 0.08 has changed the project interface:
+		- added PROJECT_NAME for a human-readable prj. name
+
+[Tip of the day: Never use comments in ( ... ) blocks.]
+[Tip of yesterday: Never echo a parenthesis unescaped in a CMD file! ;-o ]
+
+=============================================================================
+TODO:
+
+Unscheduled:
+
+! Change the version numbering to assist metadata-version checking
+  (which is not yet implemented, see [meta-ver-chk]):
+  whenever a config incompatibility arises, increase the integer part
+  of the version. All changes that keep compatibility should keep the 
+  same integer part.
+
+! [reloc-engine-dir]
+  Support freely moving the engine from __PROJECT_ROOT/.prj-tools to e.g.
+  __PROJECT_ROOT/.prj/tools (so that __PROJECT_ROOT/.prj/data can be used
+  for project metadata).
+  - It seems to just work already as it is.
+  ! Seems, but doesn't: the prj root is deduced from the engine dir, so
+    moving it will move the prj root (and then eveytihng else, too) along...
+    (See e.g. [fix-misplaced-meta-dir].)
+
+! [drop-cmd-loose-coupling] Drop the [cmd-loose-coupling] directive (see 
+  DESIGN.txt) and make things about the commands sane again... It will
+  never be safe enough to assume the commands are really in sync with 
+  the core if they have to be manually kept in sync. They will always be 
+  sloppy and I'll be reluctant to change them in fear of breaking something.
+  Stop it, and make the commands cleanly integrated on the core, on which
+  they depend on anyway, even if I've pretended this long that they can 
+  be standalone and reusable on their own. 
+  (Oh, BTW, I had minor sync issues already, and this is only one single
+  platform: adding Linux would double the maint. chores and the risk.)  
+
+! Fix save.cmd, to NOT just call __get_timestamp, VIOLATING
+  [cmd-loose-coupling]! Perhaps add some __PRJ_CMD_TIMESTAMP variable,
+  AND force running the prj command dispatcher even in shell mode, too?
+
+! Move the horrid ancient time-killer DOS batch stuff to JScript using 
+  the cscript command available on any Windows XP and above by default!
+  (Check if there is any serious availability limitation compared to CMD.exe!
+  http://technet.microsoft.com/en-us/library/ee156607.aspx suggests no
+  problems, only advantages.)
+
+! Consider .ini saving with all settings commented out by default.
+    ! This would require differentiating between an initial auto-save
+      and any other (= explicit) saving. The auto-save might be OK with
+      all vars commented out -- being all just untouched defaults or presets. 
+      However, explicit saving cannot rely on the env being untouched, and 
+      custom values must not be commented out, obviously, so nothing can 
+      be commented out, unless they are recognized to be different from a
+      default (which would not be worth the trouble).
+
+! [cleanup-versioning]
+This would be a rather heavy change, perhaps even violating 
+[cmd-loose-coupling] in terms of code duplication... :-/
+
+    a) The VERSION file is currently a misnomer: it should be something
+       like LAST_NAMED_VERSION instead.
+    b) For this reason, the system itself misuses it, too. ;) It should
+       not try to name a pack file after it.
+    c) Keep it empty to avoid (b)!
+    d) This means "prj version" cannot tell what version an intermediate 
+       package is. This hurts, but no real fix for it currently. (But see 
+       (d) how it is OK for release packages.)
+    e) Use "pack" to save intermediate (unnamed) snapshots between release
+       (named) snapshots (= baselines).
+    f) Set VERSION temporarily, when freezing a baseline, just before 
+       issuing the "pack" command. (Actually pack itself should record it,
+       but as LAST_NAMED_VERSION, not VERSION, and then the version command
+       should somehow detect if the project is still at LAST_NAMED_VERSION
+       or proceeded to a newer (and yet unnamed) state.)
+    g) The version command should also stop generating a timestamp for 
+       unnamed versions...
+
+See also: [plugin-chg-tracking-logic].
+
+! [plugin-chg-tracking-logic]
+Add option to replace the complete change management logic, within the 
+baseline management (versioning) context. The default should be the current
+"continuous versioning". In addition to that, an optional plugin should be 
+offered, with the stricter "EDMD" approach, where every update to the system 
+is done in the context of a predefined (and identified) change (using some
+appropriate project commands, and considering any direct modification that 
+avoids those prj. interfaces invalid).
+
+! Add a reset command to re-read settings from PROJECT.ini. (Meaningful only
+  in shell mode.)
+
+! Add warning for accidentally calling prj.cmd of another project from 
+  within another project's command session (e.g. shell). Now the "foreign" 
+  script will happily -- and silently -- work with the *original* project, 
+  instead of the one the prj.cmd "apparently" belongs to...
+	Note: this is one example of the anticipated problems 
+	the default __...-variable inheritance can cause!
+
+! Add hostname-based ini filtering ("sections").
+
+! Add an option to prevent pack from going up and pack the stuff from 
+  outside (with the containing dir), but stay rest and pack from inside.
+ !	This would require some preparations for processing 
+ 	command-line arguments in the stupid .cmd files.
+
+! [multi-parent]
+  So, with inheritance enabled by default, the prj script should support 
+  a child call mode, where e.g. a "PROJECT_PARENT" parameter is set to
+  another project.
+
+  Note: this approach might also be handy for supporting shared projects, 
+  which do not belong to only one parent, but can be reused by many, with 
+  optionally different settings depending on the "current parent".
+
+! [product-name]
+  Add PRODUCT_NAME and PRODUCT_TAG, too. See: [project-name-and-tag].
+  They are set to PROJECT_TAG by default.
+  Extend env.cmd to support these, too.
+  Try to precisely clarify when to use the PRODUCT_ and when the PROJECT_ 
+  names.
+  Also consider: a project may have several products, but we will support 
+  that via sub-projects (when the time comes).
+ 
+! Think about shifting the focus of "pack" to "build". (So it can also
+  change things before packing up, like incrementing the version stamp etc.)
+  Perhaps via some hook mechanism? (But updating the internals is rather
+  common; hooks should be used for extensions.)
+
+! [save-last-version-tag]
+  pack should save tha last version tag used. (No matter where it got it.)
+  (First in integrated mode; later, for standalone mode: do something similar 
+  to reading the version from the version file.)
+  See also: [version-files-split].
+
+! [version-files-split]
+  Split the project version file semantics into:
+  a) a file with an internal change counter
+  b) another file to save the name of the last named snapshot. (See also: 
+     [save-last-version-tag].)
+  Note: the next version is then either calculated based on the counter,
+  (or a timestamp???), or specified by the user. 
+  (See [auto-amd-manual-versions].)
+
+! Make sure the default auto-generated version stamp changes only if 
+  there has been a change in the project!... ;-o (Currently it is just a 
+  timestamp which changes all the time, no matter what. :) This is not really
+  an issue yet, as the version stamp is never used for anything else than
+  packaging, which only requires that the stamps don't clash (and preferably
+  also reflect the project's progress in time), but does not require that
+  the version stamps are the same for two identical snapshots of the project.)
+
+! Consider making "shell" not a command but an internal feature of prj.
+  (E.g. to avoid the extra (intermediate) process frame.)
+
+! [uniq-verson-labels]
+  Ensure the uniqueness of manual version tags, possibly even across branches!
+  (Either by checking it (but this is probably impossible across branches), 
+  or always adding the internal "version stamp".)  
+
+! [auto-and-manual-versions]
+  Versioning should go by a) an automatic internal ID comprising 
+  of some internal counter, timestamp plus the branch ID (hostname plus
+  optional user tagging!), and b) with an optional tagging, that is 
+  given at the time of taking the snapshot/baseline (usually packaging).
+
+! Both toolversion and version should use PROJECT_NAME, _TAG, and a 
+  standardized way to locate/present the CHANGE log (e.g. CHANGE.txt).
+
+! Add a web site.
+
+! [fix-pack-srcdir-name]
+  pack.cmd: will fail if basename(__PROJECT_ROOT) != PROJECT_NAME!
+
+! Merge with the system used for LunaWiki.org (-> PHP version, test 
+  feature etc.).
+
+! Merge with  (different versions of?) FlexProj.
+
+! Merge with my more arcane stuff, too.
+
+! Integrate with the rest of the .flextools.
+
+! Create a usable Linux version.
+
+? Fall back to using "%CD%" as __PROJECT_ROOT, if the location of the 
+  "prj" shortcut does not look like one (in case of a shared engine;
+  which is not currently supported, but may well become a valid need?
+	The problem is that in can of an unitialized environment 
+	and a shared engine, it is not really possible to tell 
+	which dir to choose... The grandparent dir of prj.cmd
+	would be as opaque to it as the empty current one...
+	Perhaps that could be an option to "new".
+
+? Implicitly call "new" for initializing an empty project?
+	What to do when the user explicitly calls new? (Most likely
+	not as his very first command, so the project has already been
+	initialized by that time...) Re-creating/resetting an existing 
+	project is not something I'm willing to do. 
+	Creating another project, somewhere else? (That feels somehow 
+	wrong.)
+	Or should we deter from automatically creating a new project
+	env. on any prj call altogether, leaving it as an explicit
+	task for the user? (I love the conveninence of the implicit
+	init though...)
+
+! Add auto-expansion to shortened command names (when invoked via prj;
+  e.g. prj ver -> prj version).
+
+=============================================================================
+DONE:
+
+2013-04-08 - 0.12
+* I fucked a few things in 0.1, so this is partly a regression-fixing release.
+
+. [fix-meta-unex] 
+  Fix "__PROJECT_METADATA_DIR was unexpected at this time."
+  It happened when I freshly copied 0.11 to flextor and run the 'prj'
+  shortcut command. (E.g. 'prj toolversion'.)
+  - It happens somewhere in '__setup_prj_env'.
+    - In '__set__PROJECT_INI_FILE'...
+      - Er... In '__print_error'?!?! This is the failing one:
+        call __print_error "[FIXME] __PROJECT_METADATA_DIR must be set before touching PROJECT.ini!"
+        Trying just 
+	call __print_error "[FIXME] xxx" 
+	Results in: 'xxx""=="" was unexpected at this time.'. 
+        Great.
+        And, no, changing back "echo --ERROR: %msg%" to "echo *ERROR*: %msg%" did not help.
+  - Fuck, it was the quotes around the text passed to __print_error!
+    How should I avoid this error next time?! :-(
+    (Checked at least all the __print_error and __print_warning occurrences,
+    they all seemed OK (unquoted).)
+
+. [fix-no-metadir]
+  I dunno how I managed to screw this one, but in __set_PROJECT_METADATA_DIR, 
+  there was
+	:: set __PROJECT_METADATA_DIR=%__PROJECT_ROOT%
+	set __PROJECT_METADATA_DIR=
+  instead of
+	set __PROJECT_METADATA_DIR=%__PROJECT_ROOT%
+  (Perhaps I wanted to test METADATA dir defaulting to CWD? Well, it doesn't,
+  or at least makes other stuff fail; now I know. :) )
+  Actually, this is STILL not enough, as this part DOESN'T EVEN SEEM TO GET
+  REACHED!... Because there's a "clever" part just above that section, to
+  remove the __PROJECT_ROOT portion from the metadata dir.
+  Added a check there to avoid __PROJECT_METADATA_DIR becoming empty:
+	  if "%__PROJECT_METADATA_DIR%"=="%__PROJECT_ROOT%" goto end
+  Also added an assertion to the end of the script to catch this error if I 
+  manage to trigger it again in the future. ;)
+
+  - Well, well, well... This above is STILL not enough: the recursive finder
+    for PROJECT.ini gives "" if found in the current dir! And that empty
+    value never gets fixed in the script... (How did it work before?
+    OK, checked: it was actually ALLOWED to be empty, and explicit checks
+    were put here and there to amend it as needed. Namely for the fixup 
+    of the VERSION file path. Other cases "just worked", mostly due to the
+    fact that we are in __PROJECT_ROOT anyway.)
+
+  As a safety measure, albeit very lame and unelegant, I just turned the
+  above assertion to forcing to __PROJECT_ROOT, if empty, at the end of 
+  the script. This should fix it finally, but may introduce other (hopefully 
+  smaller) anomalies. Let's see...
+  
+. Well thanks to [cmd-loose-coupling] (see DESIGN.txt), I had to change the
+  "*ERROR*" prefix to "--ERROR" in order to match the rest of the system.
+  It's high time to end the experiment and drop this hazardous directive, as 
+  it *will* do more harm than good on the long run. Let me just make this a 
+  change request: [drop-cmd-loose-coupling]...
+
+. [fix-cust-cmd-list] 
+  The custom command listing (in help.cmd) is broken: it prints the content 
+  of the custom cmd directory with funny garbled file names.
+  - Apart from replacing the old convoluted logic, now also filtering for 
+    .cmd, .bat, .exe to ignore other files in that dir.
+  - The custom command listing also crashed with 
+   "Parameter format not correct - "mp/*"
+    if PROJECT_CUSTOM_CMD_DIR=%TEMP% (in PROJECT.ini), and TEMP=T:/tmp.
+    - This is a problem of the DIR command, as it does not seem to support 
+      forward slashes in paths... Replacing DIR with some other means to
+      list files. (E.g. the 'for' used to locate PROJECT.ini?
+	for <dir> %%D in (*.cmd *.bat *.exe) do echo %%~nD
+      No, that can only do recursive scanning, and omitting the /R is 
+      something completely different. Shit. Doing a separate 'for' for
+      each supported command type then...)
+    - Well, all is not quite well even if having the listing going, as now
+      I seem to get ": was unexpected at this time." for the line
+	if not exist "%PROJECT_CUSTOM_CMD_DIR%" (
+      Umm... What?? (No matter if PROJECT_CUSTOM_CMD_DIR is t:\tmp or t:/tmp.)
+      Aaaargh, remember now: I'm using if ... ( ) else ( ) groupings, AND
+      dared to add comments in there, too -- which cripples the whole crap
+      as it gets ironed up into one line!... ;-o
+
+. Removed confusing leftover "setlocal; set inifile=%1 ... endlocal" crap
+  from the ini entry writer scripts. (Note: the internal >> %inifile% parts
+  are still needed there, unfortunately.)
+  Also renumbered them in a more sensible way.
+
+. [add-cfg-ver] Since [ver-in-metadir] requires a version conflict checker 
+  (so that projects using a previous prj-tools version would get at least 
+  some warning after an upgrade), add a new parameter to the internal
+  metadata, and bump it to the current tool version whenever the config
+  changes in an incompatible way.
+  That parameter will be added to PROJECT.ini to mark which version of
+  prj-tools (and those compatible with that) can handle it safely.
+  - NOTE: version stamping added, but 0.12 actually *is* compatible
+    with 0.9 (and such), so the actual version check is not yet needed.
+
+. Document that %var% substitutions are fine in PROJECT.ini.
+
+. [ver-in-metadir]
+  Save the VERSION file (path) parameter to PROJECT.ini as 
+    %__PROJECT_METADATA_DIR%/VERSION
+  by default. Give up the bare "VERSION" naming, as it has caused a lot
+  of obscure confusion already.
+  NOTE: making it relative to __PROJECT_ROOT seems a bit counter-
+  intuitive, as it almost never is directly in the prj. root, but almost
+  always in the meta dir. However, consider the user seeing barefoot 
+  filenames like that in the .ini, without any visible hint as to what 
+  those names are supposed to be relative to, and what's even worse: 
+  no indication either that some of the configured plain file/dir names 
+  are not even in the same dir.
+  
+  Make this a start of an overall metadata concept cleanup: every metadata
+  element should either be owned by prj-tools (being under the metadata dir 
+  somewhere, and referred to as %__PROJECT_METADATA_DIR%), or owned by the 
+  project itself, and then just "linked" to prj-tools via an absolute path.
+
+  NOTE: this is problematic with the current "save ini" logic: it can
+  only save the PROJECT_VERSION_FILE value, and cannot distinguish 
+  between 'create ini' (where it should use the above indirect %..%
+  form, setting PROJECT_VERSION_FILE for the first time), or 'update ini',
+  with PROJECT_VERSION_FILE possibly modified. It just sees an absolute 
+  path in both cases.
+  One better approach would be separating the two save cases. (See also 
+  the 'env save' command.) 
+  - Made this separation, doing 'ini/create' for auto-generating the .ini, 
+    and using 'ini/save' by the 'env save' command.
+    The only difference currently is the %META...% prefix mentioned above.
+    NOTE: 'update' is totally fake, it actually cannot update anything,
+          will not even try... Both can only save a new config...
+          (It would anyway be impossible to tell how to update a 
+          user-modified value.)
+  - OK, even cleaner if I just remove the confusing 'save' method, leaving
+    only the new 'create'. (Even I got mislead by the old one.)
+
+. [fix-misplaced-meta-dir]
+  __PROJECT_METADATA_DIR is 'data', instead of '<root>/.prj/data'.
+  - ...because I moved the engine one level deeper down, to '<root>/.prj/tools'.
+    See [reloc-engine-dir].
+1  ? Also: why does it still find the version file in '.prj/data' then?!
+    - Because the correctly located actual metadata dir is internally turned 
+      a relative path to the prj root (if it's underneath), which resulted
+      a dir looking incorrect in the context of the real, correct prj root.
+  So, in this case: just move the engine dir back up one level, and wait 
+  for [reloc-engine-dir] to be implemented.
+
+2013-04-08 - 0.11
+. Prepare the place under .prj-tools to optionally accomodate prj-metadata
+  files directly copied there.
+  . This is just a quick-n-dirty workaround, far from the ideal dir tree.    
+
+2013-04-08 - 0.1
+. [fix-stubborn-metadir] FIX "Version counter VERSION not found, creating", 
+  when the prj metadata dir is set in PROJECT.ini to something else than 
+  the dir where PROJECT.ini is. Say, it's set to "meta": if meta/VERSION
+  exists (with a manually set version stamp), just running prj will not 
+  find it, will create an empty one in PROJECT_ROOT (being the default 
+  metadata dir), and also OVERWRITE the one in "meta", with a timestamp.
+  - Well, this is an illegal case: the meta dir CANNOT be set from PROJECT.ini,
+    as it *is* the dir where PROJECT.ini is found. Setting it from PROJECT.ini
+    is actually an abuse, as prj.cmd will have an inconsistent idea where to
+    locate the bits and pieces.
+    - One fix for this could be removing the possibility of setting the 
+      metadata dir from the example PROJECT.ini file, and documenting it 
+      clearly that normally the metadata dir is where PROJECT.ini is.
+      Actually preventing that without completely disabling the metadata
+      dir preset (needed for setting a non-default dir for a newly 
+      generated PROJECT.ini) is too complicated, so just documented it.
+  ? Why are two VERSION files created, and why are they different?
+    - I think there was no timestamp version, and no overwrite either...
+      I was just stupid and seeing the 10-byte length of the VERSION
+      file I thought it cannot be just "0.94-pre", but some timestamp.
+      (Next time I'd better check the contents before panicing...)
+  ? What was the rationale to base the VERSION counter to the prj 
+    dir rather than the metadata dir?
+    - There was nothing like that. It was just an anomaly caused by 
+      changing the meta dir in PROJECT.ini. That's documented to be 
+      forbidden now.    
+. Changed "rem" to "::" everywhere (but no noticable speed increase -- did
+  they actually fix the rem problem in Redmond?! Why would they have?)
+. README: Added note to the "Installation" section about the auto-created
+  default PROJECT.ini and that its location is the meta dir.
+. Changes in the comments of PROJECT.ini, mostly warning against setting
+  any __PROJECT... internal vars there, and allowing relative path for
+  the ini file preset.
+. Changed "set ERROR=err_noprjini" to WARNING= in __set__PROJECT_INI_FILE.cmd.
+  (Need to change them to __something one day...)
+. Lots of smallish tampering around (pre)setting the meta dir & PROJECT.ini.
+. Fix error message 'Ini file "" already exists, not touching...'
+. Change the "*ERROR*:" prefix to "--ERROR:".
+
+2012-03-28 - 0.09
+. __check_prjfile.cmd: fixed wrong check for suppressing error output.
+. VERSION file creation has been completely messed up in 
+  ini\fixup\3_PROJECT_VERSION_FILE.cmd. (How come it went unnoticed 
+  so easily?!)
+. Fixed wrong comment "Location of user-created custom commands" for
+  PROJECT_VERSION_FILE in PROJECT.ini.
+. Added Steven Levithan's date.format.js (and thus the requirement of 
+  the WSH subsystem!) to eliminate the idiotic batch date/time fiddling,
+  causing nasty errors previously.
+. Slightly updated DEVELOPMENT.txt (typos etc.).
+. Slightly updated README.txt.
+. Fixed save.cmd, too, to also use the fixed timestamp logic.
+  NOTE: this is currently done by just calling __get_timestamp, VIOLATING
+  [cmd-loose-coupling]! Perhaps adding some __PRJ_CMD_TIMESTAMP variable 
+  to the prj command dispatcher before invoking any command might help 
+  (BTW, this almost looks like process accounting...), but that would be
+  a problem in shell mode, where the dispatcher is actually NOT run at all
+  by a command invokation...
+. save.cmd: Fixed incorrect warning "PROJECT_VERSION_FILE not set" when 
+  the version file did exist, but was empty.
+
+2011-09-15 - 0.081
+. shell.cmd: streamlined its self-call. (I couldn't spare the conditional 
+  branches and labels in 0.43, but now with a '& goto end' it seems to be 
+  just fine (as it used to be with my decade-old devenv shell scripts, which
+  are still not at hand now to check them, just like for 0.43, but they 
+  most likely did the same.)
+. Still printing the tool version in the tool banner, only in parenthesis.
+
+2011-09-13 - 0.08
+. Migrated to the "stock" PROJECT.ini format.
+. Fix: "Warning: Version counter ".prj-tools\VERSION" not found, creating"
+  even if it does exist!
+    * Ugh... This was caused by using parenthesis in an echo, which was in
+      a statement block -- enclosed in parentheses...
+. Upgrade all of my projects using prj-tools to 0.08-RCx for some smoke-
+  testing, before implementing [project-name-and-tag].
+  (This is to sort out possible undetected mismatch due to the same name
+  (PROJECT_NAME) having different semantics.)
+
+. prj.cmd now saves __PROJECT_LAST_CWD for use by the invoked commands
+  (so e.g. "env save xxx" could save to __PROJECT_LAST_CWD\xxx instead of
+  __PROJECT_ROOT\xxx).
+. The "env save" command now chdirs into __PROJECT_LAST_CWD to save relative
+  paths to the correct path.
+. [project-name-and-tag]
+  Split PROJECT_NAME into a "human-readable" PROJECT_NAME used e.g. in 
+  printing, and a "symbolic" PROJECT_TAG used internally, e.g. for URLs, 
+  dir and package names etc. The uniqueness of the project tag within any 
+  scope is up to the user; the system only checks for low-level (e.g. file) 
+  name collision and bails out, but will not try to be "clever"...
+
+  Both are still optional: the default PROJECT_TAG is the project dir, as
+  PROJECT_NAME used to be before. The default PROJECT_NAME is, then, the 
+  PROJECT_TAG.
+
+  Note: PROJECT_TAG is not called PROJECT_ID to avoid confusion: first,
+  it's not guaranteed to be unique (because it cannot be, from within this
+  "distributed" system), and neither tries it to be. Second, __PROJECT_ROOT 
+  is a much better candidate for an ID than an (even optionally) user-
+  supplied label anyway.
+
+  See also: [rename-prj-name-to-tag].
+
+. Update the version and toolversion commands to print both PROJECT_TAG and 
+  PROJECT_NAME.
+    * Note: toolversion cannot just use PROJECT_NAME, but (similarly to the 
+      other such vars) has to use a hardcoded name.
+    * Fixed mixed up printing of TAG/NAME.
+. Fix ini\load.cmd to (correctly) handle values with spaces!
+. Fix ini\fixup.cmd to correctly handle values with spaces!
+    * Phew, this CMD language really sucks big time...
+
+2011-09-13 - 0.08-RC3
+. Fix: Added check (+uncomment error msg) for failed creation of version 
+  counter (in ini\var\fixup\...VERSION...cmd).
+- Fix: prj toolversion sometimes cannot print the version.
+    * False alert, it was just a case of invalid session nesting (running 
+      prj. commands from another project's __PROJECT_ROOT).
+
+2011-09-13 - 0.08-RC2
+. Fix: save cannot find the version file if invoked directly (not via prj)
+  but not started from __PROJECT_ROOT.
+    * This is actually a fundamental problem due to [cmd-loose-coupling]:
+      the commands now have to make sure on their own that everything 
+      is set for their correct execution, including (re)setting the CWD,
+      which is currently not done (but rather assumed to be OK).
+
+2011-09-13 - 0.08-RC1
+. Fix stale ERROR_MESSAGE "unknown command shell" after prj shell.
+. Fix broken environment after trying to run a non-existing command.
+    * How the hell was that possible?! 
+      Well, prj itself is only call-ed by the shortcut prj.cmd, so it is 
+      "free" to pollute the env. of the caller... Adding a SETLOCAL/ENDLOCAL
+      frame to prj.cmd might fix it.
+    * Then how is it possible that I haven't seen this error before?!
+      The call command has been added in 0.043. Perhaps I just haven't
+      tried wrong commands since that.
+
+2011-09-12 - 0.07
+. Renamed "pack" to "save"!
+    * The main reason is that "packing" is a less relevant aspect of this
+      command as "saving" the current state, which may happen via some sort
+      of packing as well as e.g. a "check-in" command of a VCS (or even 
+      just plain copying stuff around).
+    * Also, this is a step closer to some "Save, Save As..., Edit (etc.)" 
+      metaphore I'm kinda' fondling currently... :)
+. Improved the docs. a bit.
+. [rename-prj-name-to-tag]
+  Preparing for splitting PROJECT_NAME to a "human-readable" PROJECT_NAME and 
+  a "symbolic" PROJECT_TAG (see: [project-name-and-tag]), first PROJECT_NAME 
+  is renamed to PROJECT_TAG.
+
+2011-09-12 - 0.06
+. The tool banner should not print the version, as it seems a bit distracting
+  (perhaps even confusing), especially when running the "version" command.
+    * The toolversion command is there to use for showing the tool version.
+. version.cmd should also print the project name (and/or tag).
+  * Note: 
+    - For unnamed (implicit) baselines, not having any idea of any 
+      possible changes since the last call, it just prints an (always
+      increasing) timestamp...
+    - For named (explicit) baselines, it just lies...: it prints the
+      last saved version tag (from the VERSION file), even though not
+      having any idea of any possible changes since recording that version.
+  This will only be fixed by [cleanup-versioning].
+. Move to continuous versioning...
+  * It means just using the tool better (can't say "properly", until 
+    [cleanup-versioning] gets implemented...), according to the following:
+    a) The VERSION file is currently a misnomer: it should be something
+       like LAST_VERSION instead.
+    b) For this reason, the system itself misuses it, too. ;) It should
+       not try to name a pack file after it.
+    c) Keep it empty to avoid (b)!
+    d) This means "prj version" cannot tell what version an intermediate 
+       package is. This hurts, but no real fix for it currently. (But see 
+       (d) how it is OK for release packages.)
+    e) Use "pack" to save intermediate (unnamed) snapshots between release
+       (named) snapshots (= baselines).
+    f) Set VERSION temporarily, when freezing a baseline, just before 
+       issuing the "pack" command. (Actually pack itself should record it,
+       but as LAST_VERSION, not VERSION, and then the version command
+       should somehow calculate if the project is still at LAST_VERSION,
+       or proceeded to some newer (but yet unnamed) state.)
+. Test: env save [inifile].
+- Finish: env load [inifile].
+  * Er... Commands only have a read-only environment, so NO "env load"
+    feature, sorry. ;-o
+. Added warning to env save when (not...) overwriting an existing file.
+. Change the default example for __PROJECT_METADATA_DIR to relative one, 
+  and add comment about it being allowed absolute, too.
+. Change the "empty" value of __PROJECT_METADATA_DIR back to "" (really
+  empty from "." (which is perfectly fine now that it's not saved in 
+  PROJECT.ini -- with one last issue: it's not shown in the env listing).
+. Added @ to 'call' statements in the shortcut commands (prefixing 'for'
+  itself did not silence it!).
+. Write the actual __PROJECT_... values (still as examples) in a saved .ini
+  file.
+. __set__PROJECT_METADATA_DIR.cmd: empty-check before removing trailing '\'.
+- Iron out PROJECT.ini auto-creation: add a command (setup?) to create 
+  it even if the env. seems broken (with defaults and/or suggestions),
+  and stop auto-creating it silently when calling prj for the first time.
+  * Now "env save inifile" can be used to explicitly request creating an
+    .ini file. (Well, not if the env. is broken, though, but for an initial 
+    setup, it should always be fine, and non-initial broken envs, saving 
+    one could be of very little help.)
+  * Also: the current default .ini saving is quite handy. Not very elegant
+    in a purist's eye, but as long as it doesn't cause any problem, it will 
+    stay enabled (in __setup_prj_env.cmd).
+. env.cmd: Removed __call_warning (to obey [cmd-loose-coupling]).
+- The default prj command should be: version?
+  * It could help keeping up-to-date about the status of the project, but
+    it could also lead to developing an ignorance about version information.
+    Let's stick with "help" until some compelling reason against it.
+. Synced the docs.
+
+2011-09-11 - 0.05
+. Find the metadata dir by a recursive scan of __PROJECT_ROOT.
+   Got rid of the hardcoded preference of ".prj-metadata" dir; just use 
+   __PROJET_ROOT as the default: the user can later simply move PROJECT.ini 
+   to any subdir anyway from now on, and that dir will be used as the 
+   metadata dir automatically.
+. Fixed typo in __set_PROJECT_PATH_APPEND_... / _PREPEND_DIR.cmd name.
+. Add PROJECT_PATH_ADD_CMD=prepend|append.
+. Slight docs update.
+. Definitely save the .ini file with commented-out variables (with 
+  dafault/suggested values) and example comments!
+. Added stripping whitespace from the PROJECT_... vars.
+  (Note: __PROJECT_... vars are still not protected.)
+
+2011-09-08 - 0.049
+. help.cmd: Added exist-check before scanning the custom command dir
+  and a warning if it doesn't, but has been set.
+
+2011-09-08 - 0.048
+. Add PROJECT_SHELL_INIT_FILE to be called by shell.cmd.
+. Fixed it to also pass all the shell args to it.
+. Tested "prj shell" via a Windows shortcut. Perfect! ;)
+
+2011-09-08 - 0.047
+. Added the "STICKY" banner to CHANGES.txt for playing with it a bit.
+. ***** IMPORTANT:
+	Changed the proxy commands from relatively calling into 
+	.prj-tools to anchoring the call to %0, so they can be called 
+	"remotely", from within any working dir. 
+- Remove the PRODUCT file, as that var can be directly passed from 
+  PROJECT.ini. (Hooray, prjtools is at my service again!...)
+	No, not hooray: rejected, because .ini loading is done much
+	later than we may possibly need the product name. Besides, 
+	as we already said: PROJECT.ini is optional. (OK, we can just
+	always keep it here, within this project, but relying this much
+	on a fundamentally optional file goes way against any sane 
+	principles.)
+. Added some explanatory comments to the stock PROJECT.ini.
+. Renamed internally ("changed the PROJECT_TAG") to prjtools (from prjman).
+
+2011-09-08 - 0.046
+. Renamed internal PRODUCT_NAME to PRODUCT.
+. ***** IMPORTANT: [fix-late-cd]
+  Fix broken relative lookup when not calling from the project_root (e.g.
+  calling prj.cmd directly, or calling it with a preset __PROJECT_ROOT.
+  	prj.cmd should CD to __PROJECT_ROOT early, before calling any 
+	internals (which all depend on it...)!
+- Stop using PUSHD/POPD: they are less robust (e.g. against an unbalanced 
+  push/pop sequence in a failing prj command?) and less flexible (requires
+  stricter framing) than the plain old get/set %CD% logic I originally used.
+	Currently rejected, as [fix-late-cd] made prj.cmd more stable,
+	removing the urge...
+. Fix docs incorrectly saying that proxy commands are needed for prj 
+  root lookup. (They are not required for anything; the "real" prj.cmd is 
+  used for that, not the shortcuts.)
+. Shifting to use "shortcut" instead of "proxy command"... (Mostly in
+  the docs. and here.)
+. env.cmd: Add printing %CD%.
+. prj.cmd: Add printing %PROMPT% and %CD% (note: "env" is duplicated there
+  inline, not being able to call commands in that "brken env" error state!).
+. Added placeholder (reminder) command "new" that will create a new, empty
+  project. (Well, setup.cmd already existed, so I just had to rename it.)
+. Doc. update (quite usable now).
+. Removed ./in to reduce clutter, renamed bin to example.bin, and ok.cmd
+  to hello.cmd (to also look like an example, not only be one...).
+. help.cmd: list also the custom commands.
+
+2011-09-08 - 0.045++
+. Slight updates to DEVELOPMENT.txt.
+. Try to change __PROJECT_METADATA_SUBDIR to __PROJECT_METADATA_DIR.
+  (The system will continue to set it as a subdir relative to __PROJECT_ROOT, 
+  but the user can override it with both an absolute or a relative path.)
+. Moved the .ini file handling out from prj.cmd to __setup_prj_env.cmd.
+- pack.cmd: Exclude the project archive dir from packing if it's under
+  the project itself?
+	If the archive dir is within PROJECT_ROOT, new package sizes will
+	explode, unless the old packages are moved to a correct backup place.
+	Well, this implies that it is NOT the correct backup place: regular
+	package archives should NOT be kept under the project dir!
+	It may mean two things: it is either a temporary location of 
+	packages, handled by some external means, or it is not at all a 
+	place for packages, but some other -- unknown -- location, and it 
+	just so happens that the packages are still put there for some reason. 
+	Either way, there is not much point in specifically making an effort 
+	to exclude the old packages from there.
+	Excluding the whole dir would risk loosing important archive files
+	not packed automatically, excluding only the automatic packages would
+	be both difficult (short of an unambiguous naming scheme) and we
+	can also never be sure if an automatic backup was not put there 
+	by hand, intentionally (as e.g. some important example etc.)
+
+	All in all: the archive dir should NOT be under the PROJECT_ROOT,
+	so this is rejected for now.
+. Tested & fixed presetting __PROJECT_METADATA_DIR and __PROJECT_INI_FILE.
+. Tested compatibility with 0.032, upgrading under KiloCMS.
+	PROJECT_ARCHIVE_SUBDIR needed to be changed to PROJECT_ARCHIVE_DIR.
+. Tested compatibility with 0.04, upgrading under the "gomba" project.
+	PROJECT_ARCHIVE_SUBDIR needed to be changed to PROJECT_ARCHIVE_DIR.
+. Tested fresh setup under fixyourcountry.org.
+
+2011-09-07 - 0.044
+. Doc. updates.
+. Verify that __PROJECT_METADATA_SUBDIR has the correct semantics.
+. Fixed timestamp generation to replace leading space with a 0 when %TIME% 
+  is like " 0:12:34".
+	Note: currently this is coded twice: in __get_timestamp, and in
+	pack.cmd (to support standalone mode).
+. Change PROJECT_VERSION_FILE to _DIR semantics.
+. Change the default version file name from PROJECT_VERSION to VERSION.
+. __set_PROJECT_VERSION_FILE.cmd: Fixed typo: 
+	bad:  %__PROJECT_METADATA_SUBDIR%\%PROJECT_VERSION
+	good: %__PROJECT_METADATA_SUBDIR%\PROJECT_VERSION
+. Make sure the default config works like this:
+  1. copy .prj-tools and prj.cmd to a plain project dir.
+  2. prj pack works, using the current dir as project_root, the basename
+     of project_root as the project/product name, a timestamp as the version,
+     and puts the packed stuff to the current dir.
+. Added __get_project_root.cmd.
+. Allow inheriting __* vars (blocking their recalculation by presetting them).
+  (The current handling is not consistent.)
+	There's a valid dilemma about whether to allow or disallow it by
+	default.
+	First they were intended to be overridable, but that would probably 
+	make command session nesting (e.g. for subprojects) more problematic.
+	And/or easier?... Anyhow, either a child session should somehow 
+	know that it should still forcibly override things (all? some?),
+	or the parent should somehow know what parameters the child would 
+	want to reset, and unset them first (which would require an 
+	intermediate, temporary command frame, as the live variables of 
+	the parent frame cannot be unset; but even without that, this 
+	already smells really bad...).
+
+	The key for deciding in favor of inheriting is that the user vars 
+	(those without the __ prefix, e.g. PROJECT_NAME) *are* inherited 
+	anyway, which would probably cause the same problem to solve with 
+	the child sessions.
+
+	Anyhow, the only __PROJECT_... var that might make sense to override
+	is the __PROJECT_METADATA_SUBDIR.
+
+. Removed PROJECT_VERSION_FILE_FULLPATH (never used).
+
+2011-09-07 - 0.044-pre3
+. Fix Add PROJECT_CUSTOM_CMD_DIR to NOT default to "." but just empty, as 
+  "." can cause funny infinite loops when prj tries to call the command
+  proxy scripts...
+. There should be a warning when PROJECT_CUSTOM_CMD_DIR is set to the same 
+  place as the proxy script's dir!
+. Print the tool banner earlier, so early warnings and errors do not
+  hang out in the air.
+. Rename __set_prjvars.cmd to __fixup_env.cmd to reflect its broader
+  responsibility of no just setting some vars but also making them correct.
+. Rename PROJECT_ADDPATH_SUBDIR to PROJECT_PATH_PREPEND_DIR, and also add
+  PROJECT_PATH_APPEND_DIR.
+. Finish renaming the __set_prj*.cmd scripts to match their corresponding
+  variable names exactly.
+. Rename __set_prj_metadata_subdir.cmd to __get_prj_metadata_subdir.cmd
+  to differentiate it from user variable setters. (It actually still sets
+  that var, but it's main task is detecting it, and it functionally still 
+  belongs to the internal default generators.)
+. Change PROJECT_ARCHIVE_SUBDIR to PROJECT_ARCHIVE_DIR.
+	This caused a serious issue with pack.cmd, which could not
+	handle a relative dir (because it steps up one dir level to
+	allow zip to pack the project *with* its containing directory).
+	PROJECT_ARCHIVE_DIR needed to be post-processed into
+	__PROJECT_ARCHIVE_SUBDIR and __PROJECT_ARCHIVE_ROOT, so
+	that pack.cmd can decide what to do with the dir set.
+. Changed default PROJECT_ARCHIVE_DIR from .prj-metadata/PROJECT_ARCHIVE
+  to just ".".
+. Added __check_rel_path.cmd (which took ~2 hours to create... And then I
+  found out that a simple 'if exist "./%dir%"' would be just enough, as we
+  are mostly only interested in existing stuff anyway!... :-o )
+. Added __check_existing_rel_path.cmd.
+. Removed __PROJECT_ARCHIVE_FULLPATH (never used).
+
+2011-09-07 - 0.044-pre2
+. Updated the user docs.
+. Start renaming the __set_prj*.cmd scripts to match their corresponding
+  variable names exactly.
+. [cmd-extend]
+  Add PROJECT_CUSTOM_CMD_DIR, which is NOT added to the PATH, but prj.cmd
+  will try loading custom commands from there first. Builtin commands are
+  selected only if a custom one was not found.
+
+  NOTE: Custom commands are NOT called just by their basename, using
+	PATH-lookup, because adding PROJECT_CUSTOM_CMD_DIR to the PATH
+	would cause unnecessary namespace pollution (with short, simple, 
+	common names of the highest conflict risk...).
+
+	This has the drawback of not automatically supporting every type
+	of Windows executable (.EXE, .BAT etc.), only those explicitly
+	looked for by __check_custom_cmd.
+
+	A custom command can be any *.cmd, not only modified built-ins, but
+	also arbitrary add-ons (which have no builtin variant).
+
+2011-09-07 - 0.044-pre1
+. Standardizing on returning error from internal scripts via ERROR=error_code
+  and also a default ERROR_MSG=Error message, where error_code can be used 
+  as a goto label, if needed.
+. Added __print_error.cmd and __print_warning.cmd.
+. Make it possible for (at least) the __check_... scripts to optionally 
+  call __print_error.cmd.
+	Printing is the default, suppressing if the first arg. is noprint.
+. prj.cmd: Improved the comments further.
+. Removing .cmd from internal __script_names to help platform-independent
+  coding a bit.
+
+	Frist rejected because on UNIX (and in PHP) the full script names 
+	would be used anyway, and also because if we would settle on
+	extensionless names, then Windows would refuse to load them (as
+	it always requires the proper extension on the file names, letting
+	you omit them in the call statements only).
+
+	But then still commenced, as the code could still have somewhat
+	less clutter (and less platform-dependencies), only the Windows
+	files would need to be called *.cmd. On other platforms, calling
+	extensionless file names -- although not at all elegant -- would
+	be quite possible. Even more likely it is to use functions there
+	anyway,	instead of scripting the shit out of them like on Windows.
+
+	Not to mention that I also tended to forget that ".cmd" from the
+	end of those "call __some_thing" statements anyway... ;)
+
+	(It is also pretty safe to omit the .cmd extensions, as prj.cmd
+	puts the script dir to the beginning of the PATH, not to the end.
+	Well, assuming that path lookup does "ext fuxup" rather than "dir
+	enumeration" first... Which I'm not sure about, but don't give a
+	fuck now, sorry. Life is too short. I take the risk: if it ever 
+	causes an error, I'll find and fix the crap on Windows for free. ;) )
+
+2011-09-07 - 0.043
+. Added __check_cmd.cmd to check if a command exists. (Used by prj and
+  and help for now.)
+. prj.cmd now calls __print_tool_banner.cmd to print the toolset name
+  and version, before calling the actual commands. (Note: toolversion 
+  prints the same version, but also a few more details). 
+  The printed "toolset name" is read from __PROJECT_TOOLS_ROOT\PRODUCT_NAME,
+  so each platform implementation can have it. (Compare: [product-name].)
+. Hacked banner printing removed from the toolversion and help commands.
+. Streamlined the self-call of shell.cmd. (First screwing it by making it
+  "too streamline": just an 'if not "%0"=="rerun" cmd /k %0 rerun %*' 
+  is WRONG; I can't spare the conditional branches and labels. Strange:
+  I used to still have it as short as that in my decade-old devenv
+  shell scripts, and saw no problem. They are not at hand now to check.)
+. prj.cmd: Improved the comments and slightly cleaned the startup logic.
+. Changed subshell calls to script "call"s in the proxy commands.
+- Passing %0 from the "proxy" prj.cmd to the "engine" prj.cmd (to help
+  finding the PROJECT_ROOT.)
+	Rejected because this would break the separation of internal logic 
+	from the proxy scripts (which are optional, in the first place...).
+. shell.cmd: Added shift /1.
+. Stick to using '\' in Windows, not '/' (to:avoid\strange\looking/paths).
+  (Except for PROJECT.ini, which should be platform-independent.)
+. Add optional PROJECT_ADDPATH_SUBDIR to PROJECT.ini.
+  This should be used to allow putting the proxy(?) scripts as well as 
+  any custom commands there, and still access them directly. 
+  But all this seems make sense only in "shell mode" (command 'prj shell'), 
+  so this might be better being a prj shell argument instead.
+. env.cmd: Print the PATH and PROMPT, too.
+. prj.cmd: Removed extra \ from the ...\tools PATH part.
+. prj.cmd: Added error "unknown command".
+. help.cmd: Added help [cmd] syntax to print help about a specific command.
+  (Doint nothing yet.)
+
+2011-09-06 - 0.042+
+. Changed env var __prjinifile to __PROJECT_INI_FILE explicitly offering it
+  for use in prj shell mode.
+
+2011-09-06 - 0.042
+. Added prj command "shell". It opens a shell with the same environment as
+  which prj.cmd prepares for the prj commands.
+. Temporarily set the working dir to __PROJECT_ROOT on command execution 
+  (using PUSHD/POPD on Windows).
+
+2011-09-05 - 0.041a
+. Slight changes in pack.cmd (incl. "Warning" -> "WARNING" etc.).
+. help.cmd now filters listing commands in cmd/ by "*.cmd".
+
+2011-09-05 - 0.041
+. As this project actually hosts itself, we can make the PROJECT_VERSION_FILE 
+  the same as the tool version! Just moved it from the metadata to prj-tools.
+. Also, prj.cmd (and toolversion.cmd) should get its own version from there 
+  (but obviously NOT via the standard internal tools, which would give the 
+  *host* project).
+  (Well, as a drawback, manual version updates are back... ;-o However, now
+  only at one single place, not two.)
+. Added some more thoughts (change requests) about versioning.
+. Changed default prj action from env to the new cmd. help.
+. Hmm, fixed again the internal version (to 0.04). (No escape, until this 
+  is automated, too!...)
+. Minor docs. changes.
+. Other minor changes (around cmd/* and in CHANGES.txt).
+
+2011-09-05 - 0.04 (Just to play with named versions... ;)
+. Just a baseline release with fairly usable release packaging.
+
+2011-09-05 ("Continuous versioning" finally, with optionally named baselines)
+. Fixed parameter passing in the %cmd% call: now using %1 %2 %3... instead
+  of %*, because that seems to be ignored by shift.
+. [verson-labels]
+  Add a "version-label" parameter to pack.cmd to override any internally 
+  set versions. (And later it should also protect against human mistakes, 
+  too; see: [uniq-verson-labels].)
+. pack.cmd: Issue a warning if no version tag is given and none could be
+  calculated.
+. [uniq-verson-labels-chk-file]
+  Check at least if a pack file with a given version tag already exists,
+  before going ahead to create it.
+. pack.cmd: Removed leftover "s from the error messages.
+
+2011-09-05 - 0.035
+. Changed __get_timestamp and pack.cmd to use %DATE% and %TIME% (which 
+  allows seconds and even milliseconds, too, in contrast with the stupid 
+  TIME /T command).
+. Added the version command to tell the version of the (host) project.
+. Merge back timestamp fallback from pack.cmd into the core, to allow
+  "generic versioning" (automatic version identification and tagging,
+  without the need of explicitly incrementing the version stamp). This
+  should finally make it possible to safely get rid of stupid taggin
+  schemes like "1.23+" or "0.35-pre" or even "0.35-pre2"...
+. Now, if the PROJECT_VERSION_FILE is empty, a timestamp is used instead,
+  as the "version".
+. Fixed the manually set tool version in prj.cmd (wrong zeroes again: was
+  0.35 instead of 0.035). This manual versioning REALLY sucks!
+
+2011-09-05 - 0.034
+. Added __get_hostname.cmd.
+. Added __get_project_version.cmd
+. Added the toolversion command to tell the version of prj-tools.
+  (As we have no build automation, the version is manually stepped within
+  prj.cmd at each release/change.)
+
+2011-09-05 - 0.033
+. Moved external tools from .prj-tools/*/cmd/. to .prj-tools/*/tools/.
+. Add InfoZip's unzip.exe to .prj-tools/*/tools/.
+. pack.cmd: add timestamp tag if no version info.
+. Added __get_timestamp.cmd (but only minute granularity, as per TIME /T!)
+. Deleted stale README.txt and reminder Windows *.cmd from ./linux/,
+  added env.sh and dummy prj.sh. (They should not be called .sh, I guess...)
+. Add config variable for an external tools dir (to avoid having put all those
+  .exe files under the proj. metadata)?
+	- No need to do anything: just put the external tools there, and 
+	  they will be used (and preferred over the others on the PATH).
+
+2011-09-05 - 0.032
+. Fixed version number order in PROJECT_VERSION (0.3 --> 0.03).
+  Old wrong package names have been manually renamned.
+. Add project_root/pack.cmd "proxy" command.
+. Restructure .prj-tools.*/... to .prj-tools/*/...
+  (This required updating __get_parent_dir.cmd and prj.cmd.)
+. Add InfoZip's zip.exe to .prj-tools/*/cmd/.
+. Add tar.exe, gzip.exe, bzip2.exe to .prj-tools/*/cmd/.
+. pack.cmd: no need to check for zip.exe any more. ;)
+
+2011-09-05 - 0.03
+. Fix: if PROJECT.ini is in the project root, prj.cmd fails on its 
+  first run, when there is no .prj-metadata dir and project_metadata is not 
+  set in PROJECT.ini, but then it creates it, and then succeeds on subsequent 
+  calls.
+. Changed PROJECT_METADATA_SUBDIR to __PROJECT_METADATA_SUBDIR!
+
+2011-09-05 - 0.02
+. Fix: put back %__engine_dir%/cmd/... to command execution. (Relative cmd/
+  calls broke if prj.cmd was invoked by another script from some other dir!)
+  Now a "proxy" prj.cmd (with @.prj-tools.win/prj.cmd %*) can be added to 
+  the project root.
+
+2011-09-04 - 0.01 (Bootstrapping: architecture prototyping, basic stuff)
+. prj command works.
+. prj env works.
+. prj pack works (requires InfoZip's zip.exe!)
+. Now using it with KiloCMS.
+. (Highly regretting that I have abandoned all the many smilar and related 
+  attempts before this one. Now I've been spending countless hours on 
+  duplicating already duplicated efforts...)

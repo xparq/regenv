@@ -1,0 +1,88 @@
+rem -------------------------------------------------------------------------
+rem  This is extracted out to a separate file, as -- quite shockingly -- 
+rem  rem statements appear to SLOW DOWN a script very significantly!
+rem  (Obviously they do not skip full parsing, just try to hide the rest
+rem  of the line by some dummy processing. One proof is that it's possible
+rem  to have rem lines that cause a syntax error! Try this: %~... ;) )
+rem -------------------------------------------------------------------------
+rem
+rem  Check if %1 is a relative path (one that can be appended to an
+rem  absolute path).
+rem
+rem  Returns RESULT=1 if relative, RESULT= (unset) if not.
+rem 
+rem  Note: on Windows a path can be absolute, relative or symbolic:
+rem
+rem  	a) absolute: one that can be used as a prefix to a relative path 
+rem  	   to create an absolute path unambiguously.
+rem
+rem  	   E.g.: D:\
+rem  	         D:\some\path
+rem  	         D:\some\path\
+rem  	         D:\some\path\.
+rem  	         D:\some\..\path
+rem  	         D:\some\.\path
+rem  	         \\some\network\path
+rem  	         //some/network/path
+rem  	         \/some\network/path
+rem  	         /\some/network\path
+rem
+rem              (Although valid, the latter two are absolutely stupid and 
+rem  	         noone will use them, programs enjoy doing stupid things 
+rem  	         like that. Instead of lamenting about what to do with those, 
+rem  	         I just handle them as absolute (e.g. for the reason that
+rem  	         an automatic conversion might come and fix the slashes, 
+rem  	         making them proper absolute UNC paths.)
+rem
+rem  	b) relative: one that can be appended to any path to create
+rem  	   a valid path (either abs. or rel.).
+rem
+rem  	   E.g.: the empty path ("") 
+rem  	         .
+rem  	         ..
+rem  	         .\some
+rem  	         ../thing
+rem              some\path
+rem  	         some\path\
+rem  	         some\path\.
+rem  	         some\path\..\here
+rem  	         \some\path\
+rem  	         /some/path/
+rem
+rem              (Although the latter two are pretty shaky, they are 
+rem  	         considered relative on Windows, since they can not be used
+rem  	         to make a relative path absolute, but can be appended to
+rem  	         any path just fine.
+rem              NEVER ASSUME THAT THESE PATHS ARE RELATIVE ON WINDOWS!)
+rem
+rem  	c) symbolic: those that cannot be safely (or "easily, automatically") 
+rem  	   used as a prefix or postfix to any other path.
+rem
+rem  	   E.g.: d:
+rem  	         d:thing
+rem  	         d:.
+rem  	         d:..\
+rem  	   
+rem  	         (Those above are not relative: can't be prefixed; and not 
+rem              absolute either: can't be used as a prefix to create an 
+rem  	         absolute path unambiguously.)
+rem  	   
+rem  	         con:
+rem  	         aux:
+rem
+rem  So, what it all boils down to is: a relative path is something that does 
+rem  not have a drive-letter or does not start with \\ or //. (Note: Windows 
+rem  does not allow dir and file names with colons, as those are reserved for 
+rem  special names, like drive letters.)
+rem  This is something of a good news, as colons in URLs (and even in some
+rem  UNIX file naming scenarios) may cause problems, so we can generally 
+rem  advise not to use colons in your file/dir names.
+rem  (Note: we don't care about it actually, so you still freely can, if your
+rem  host system allows. This is really just an advice -- one that you would 
+rem  appreciate, though, by the first time you copy tens of thousands of files
+rem  from Linux to an NTFS drive. ;) )
+rem
+rem  NOTE: We cannot just use for /f %f in (...) do echo %~df as it tries
+rem  to be too clever and guesses the drive letter even if the path does 
+rem  not have any... :-/
+rem 

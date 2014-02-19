@@ -1,0 +1,19 @@
+rem  With millisecond's granularity. 
+rem  Well, this being Windows, all is not so easy... There is no documented
+rem  way to make sure the TIME part always has 00:00:00 format; it will be
+rem  actually locale-dependent. Anyhow, the leading space must be replaced
+rem  with a 0...
+
+set __date=%DATE%
+set __time=%TIME%
+
+rem  Check if we need to prepend a 0:
+if not "%__time:~0,1%"==" " goto time_ok
+rem  Trim any leading whitespace first:
+for /f %%t in ("%__time%") do set __time=%%t
+set __time=0%__time%
+:time_ok
+
+set __date=%__date:~0,4%%__date:~5,2%%__date:~8,2%
+set __time=%__time:~0,2%%__time:~3,2%%__time:~6,2%%__time:~9,2%
+set __timestamp=%__date%-%__time%

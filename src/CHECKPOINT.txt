@@ -1,0 +1,15 @@
+-----------------
+winenv test case:
+
+P:\win32_\generic\winenv\...
+
+build-vc.cmd
+
+set kaka=xx;pisi
+run-vc set kaka=xx;pisi
+run-vc set -s kaka pisi
+set kaka
+
+(See the winenv/CHANGES.txt!)
+
+-----------------
