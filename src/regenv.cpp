@@ -1,6 +1,6 @@
 // License - Free for any purpose, just do not remove the copyright
 // Copyright (C) 1997-2007 - Jonathan Wilkes
-// Copyright (C) 2012-2013 - Szabolcs Szasz
+// Copyright (C) 2012-2014 - Szabolcs Szasz
 // See README for more details, e.g. change history and licensing.
 
 #define WIN32_LEAN_AND_MEAN
@@ -67,7 +67,7 @@ const regkey REG_ENV_SESSION = { HKEY_CURRENT_USER, _T("Volatile Environment") }
 
 void ShowBanner()
 {
-	cout << _T("WINENV 0.94 - Copyright (C) 2012-2013 Szabolcs Szasz, 2005-2008 Jonathan Wilkes\n\n");
+	cout << _T("REGENV 0.95 - Copyright (C) 2012-2014 Szabolcs Szasz, 2005-2008 Jonathan Wilkes\n\n");
 }
 
 // Do not call this automatically in case of user errors, because
