@@ -7,7 +7,7 @@ echo Adding VC10...
 call vc10-2003-mixed __fallthrough__
 
 echo Adding GCC...
-call mingw-4.8 __fallthrough__
+call mingw __fallthrough__
 
 start %__PROJECT_METADATA_DIR%\farshell.lnk /w /rc %__PROJECT_ROOT%/ %*
 exit

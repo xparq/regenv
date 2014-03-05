@@ -15,8 +15,8 @@ using namespace std;
 #include "dbg.h"
 
 
-char __still_not_lambda__normalize_case(char c) { return ::tolower(c); }	
-char __still_not_lambda__normalize_case_and_slash(char c) { return (c == '\\' ? '/' : ::tolower(c)); }	
+char __still_no_lambda__normalize_case(char c) { return ::tolower(c); }	
+char __still_no_lambda__normalize_case_and_slash(char c) { return (c == '\\' ? '/' : ::tolower(c)); }	
 
 string::size_type FindListPart(const string& sequence_in, const string& element_in, LIST_TYPE list_type = LIST_TYPE::PATH, string::size_type pos = 0)
 // Find a substring in a ';'-sepadated sequence of substring elements, 
@@ -52,8 +52,8 @@ string::size_type FindListPart(const string& sequence_in, const string& element_
 
 	// Normalize both sequence and element to (a) be case-insensitive, (b) containing only forward slashes.
 	auto f_xlat = (list_type == LIST_TYPE::PATH
-				? __still_not_lambda__normalize_case_and_slash
-				: __still_not_lambda__normalize_case);
+				? __still_no_lambda__normalize_case_and_slash
+				: __still_no_lambda__normalize_case);
 	string sequence, element;
 	transform(sequence_in.begin(), sequence_in.end(), back_inserter(sequence), f_xlat);
 	transform(element_in.begin(), element_in.end(), back_inserter(element), f_xlat);	

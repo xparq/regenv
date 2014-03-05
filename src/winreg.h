@@ -1,8 +1,18 @@
 #include <windows.h>
 #include "dbg.h"
 
+// This check is probably unsafe (incomplete). E.g. MSVC links fine, 
+// but GCC does not, even if it used to do so. :( Now I get famous
+// "The procedure entry point RegGetValueA could not be locaed  
+// in the dynamic link library ADVAPI32.dll."
+// Here RegGetValue is said to be only available on Windows XP 64-bit:
+// http://social.msdn.microsoft.com/Forums/vstudio/en-US/910a0e22-42bf-437d-8f5b-0162cc691f89/the-procedure-entry-point-reggetvaluea-could-not-be-located-in-advapi32dll?forum=vcgeneral
+// But it's obviously not true in my case, where I seem to have 
+// it on my 32-bit system when compiling with MSVC. (And used to
+// have it with GCC, too.)
+//#if 1
 #if (_WIN32_IE < 0x0602)
-#define NO_REGGETVALUE 1
+#	define NO_REGGETVALUE 1
 #else // Win2003 & up (?)
 //for Vista: #include <Shlwapi.h>	// SHRegGetValue + SRRF_... consts
 #endif

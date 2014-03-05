@@ -94,7 +94,7 @@ DONE:
 . Added ListPart.h with the common decls. for the XxxListPart modules;
   also renamed PATH_SEPARATOR (';') to ELEMENT_SEPARATOR (as PATH_SEPARATOR
   could be confused with the '/' separators in paths...).
-. Fix the MAX_PATH(?) overrun... To reproduce the error (NOT ALWAYS POSSIBLE!): 
+. [path-crash] Fix the MAX_PATH(?) overrun. To reproduce it (NOT ALWAYS POSSIBLE!): 
   1.) Open the Startup folder in Explor and punch Enter on the init.cmd icon 5 times.
   3.) DBG showed "regkey.CheckValue_STR() --> status = 0", just before
    "UPDATING EXISTING LIST VAR..." and then the crash.
