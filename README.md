@@ -1,9 +1,9 @@
 End-users:
 
-- The only file you are probably interested in is [regenv.exe](test/vc/regenv.exe),
-  you can just grab it and run! ;-o
+The only file you are probably interested in is [regenv.exe](https://github.com/lunakid/regenv-win32/raw/master/test/vc/regenv.exe),
+you can just grab it and run! ;-o
 
-- The rest of this text is for developers. See [README.txt](README.txt) for end-user docs.
+The rest of this text is for developers. See [README.txt](README.txt) for end-user docs.
 
 
 Developers:
