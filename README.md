@@ -8,7 +8,7 @@ End-users:
 
 Developers:
 
-* The stuff currently compiles with Visual Studio C++ 2010 compiler and MinGW/GCC 4.7.
+* The stuff currently compiles with Visual Studio C++ 2010 and MinGW/GCC 4.7.
 
 * See [CHANGES.txt](CHANGES.txt) for pending/finished issues.
 
