@@ -8,7 +8,7 @@ using namespace std;
 #include "FindListPart.cpp"
 #endif
 
-#include "ListPart.h"
+#include "ValueList.h"
 
 //#undef DBG_OFF
 #include "dbg.h"
@@ -16,7 +16,7 @@ using namespace std;
 
 // Delete a substring from a ';'-sepadated list of substrings.
 // See FindListPart() for details.
-string DelListPart(const string& sequence_in, const string& element_in, LIST_TYPE list_type = LIST_TYPE::PATH, string::size_type start_pos = 0)
+string DelListPart(const string& sequence_in, const string& element_in, MATCH_TYPE flags = MATCH_TYPE::PATH, string::size_type start_pos = 0)
 //!!FIXME: element itself can also be a sequence!
 {
 	if (sequence_in.empty()) {
@@ -26,7 +26,7 @@ string DelListPart(const string& sequence_in, const string& element_in, LIST_TYP
 		return sequence_in;
 	}
 
-	string::size_type pattern_pos = FindListPart(sequence_in, element_in, list_type, start_pos);
+	string::size_type pattern_pos = FindListPart(sequence_in, element_in, flags, start_pos);
 	if (pattern_pos == string::npos) {
 #ifdef TEST_DelListPart
 DBG "[", element_in, " NOT FOUND!]";
@@ -71,18 +71,18 @@ int main()
 
 	DBG "--------------- Basic non-PATH...";
 	DBG_(sequence1);
-	DBG_(DelListPart(sequence1, "c:\\tmp", LIST_TYPE::NORMAL));
-	DBG_(DelListPart(sequence1, "x:\\in", LIST_TYPE::NORMAL));
-	DBG_(DelListPart(sequence1, "Dummy", LIST_TYPE::NORMAL));
-	DBG_(DelListPart(sequence1, "xxx", LIST_TYPE::NORMAL));
+	DBG_(DelListPart(sequence1, "c:\\tmp", MATCH_TYPE::NORMAL));
+	DBG_(DelListPart(sequence1, "x:\\in", MATCH_TYPE::NORMAL));
+	DBG_(DelListPart(sequence1, "Dummy", MATCH_TYPE::NORMAL));
+	DBG_(DelListPart(sequence1, "xxx", MATCH_TYPE::NORMAL));
 	PAUSE
 
 	DBG "--------------- Positioned non-PATH...";
 	DBG_(sequence1);
-	DBG_(DelListPart(sequence1, "c:\\tmp", LIST_TYPE::NORMAL, 1));
-	DBG_(DelListPart(sequence1, "x:\\in", LIST_TYPE::NORMAL, 1));
-	DBG_(DelListPart(sequence1, "dummy", LIST_TYPE::NORMAL, 1));
-	DBG_(DelListPart(sequence1, "xxx", LIST_TYPE::NORMAL, 1));
+	DBG_(DelListPart(sequence1, "c:\\tmp", MATCH_TYPE::NORMAL, 1));
+	DBG_(DelListPart(sequence1, "x:\\in", MATCH_TYPE::NORMAL, 1));
+	DBG_(DelListPart(sequence1, "dummy", MATCH_TYPE::NORMAL, 1));
+	DBG_(DelListPart(sequence1, "xxx", MATCH_TYPE::NORMAL, 1));
 	PAUSE
 
 	DBG "--------------- PATH type: case and slash differences...";

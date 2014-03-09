@@ -9,39 +9,50 @@ using namespace std;
 //using namespace std;
 #endif
 
-#include "ListPart.h"
+#include "ValueList.h"
 
+//!!NOTE: As this file is currently just #included directly into regenv.cpp, 
+//!!      setting this flag here would interfere with the one set there!
 //#undef DBG_OFF
 #include "dbg.h"
 
 
-char __still_not_lambda__normalize_case(char c) { return ::tolower(c); }	
-char __still_not_lambda__normalize_case_and_slash(char c) { return (c == '\\' ? '/' : ::tolower(c)); }	
+#ifdef TEST_FindListPart
+#	define CATCH_CONFIG_MAIN
+#endif
+#include "catch.hpp"
 
-string::size_type FindListPart(const string& sequence_in, const string& element_in, LIST_TYPE list_type = LIST_TYPE::PATH, string::size_type pos = 0)
-// Find a substring in a ';'-sepadated sequence of substring elements, 
-// starting from 'pos', and return its offset if found, else string::npos.
+
+char __still_no_lambda__normalize_case(char c) { return ::tolower(c); }	
+char __still_no_lambda__normalize_case_and_slash(char c) { return (c == '\\' ? '/' : ::tolower(c)); }	
+
+CHARPOS FindListPart(const string sequence_in, const string element_in, MATCH_TYPE flags = MATCH_TYPE::PATH, CHARPOS pos = 0)
+// Find 'element' in a ';'-sepadated 'sequence' of elements (substrings), starting 
+// from 'pos', and return its offset if found, else string::npos.
 //
-// The search is not case-sensitive, and if is_path then treats '/' and '\' 
-// as being the same.
+// If flags has MATCH_TYPE::PATH then '/' and '\' are treated the same.
 //
-// NOTE: An element "en" can't be just string-searched, because in a "seq;ence;" 
-//       it would be incorrectly found. The comparison should be done on complete
-//       list elements, which are non-separator chars between separators, where
-//       the beginning (the virtual "-1st" char) and the end (EOS) of 'sequence'
-//       are also considered separators.
+// The search is not case-sensitive.
 //
-//       Also, if 'element' itself is a list, its component sub-elements should be
-//       searched one by one in 'sequence', otherwise it'd be an "all or nothing" 
-//       business, where (all) the sub-elements would only be found if 'sequence'
-//       happens to contain 'element' (the whole sub-element list) verbatim (which 
-//       is probably quite a common case, in fact).
-//       This version only supports this "all or nothing" case.
+// NOTE:
+//	An element "en" can't be just string-searched, because in a "seq;uence" 
+//	it would be incorrectly matched. The comparison should be done on 
+//	complete list elements (non-separator chars between separators). 
+//	The beginning (the virtual "-1st" char) and the end (EOS) of 'sequence'
+//	are also considered separators.
 //
-//!!FIXME: Can we be more useful if element itself is also a sequence?
-//	At least we could trim leading/trailing path separators and path-separtors
-//	from element before comparison, but that would be too much hassle for low gain.
-//!!FIXME: Add locale/UTF support (everywhere, not just here)!
+//!!TODO:
+// !	If 'element' itself is a set of sub-elements (a ;-separated list), 
+//	its own parts should be searched for one by one in 'sequence', too, 
+//	otherwise it'd be an "all or nothing" case, where all the parts would 
+//	only be found if 'sequence' happens to contain 'element' verbatim (which 
+//	is probably a common case, in fact).
+//	This practically means converting the 'sequence' and 'element' to
+//	ordered sets, then merging them into 'sequence', while preserving 
+//	the order of those elements existing in both, as found in 'sequence' 
+//	(not in 'element').
+//
+// !	Add locale/UTF support (everywhere, not just here)!
 {
 	if (sequence_in.empty()) {
 		return string::npos;
@@ -50,21 +61,25 @@ string::size_type FindListPart(const string& sequence_in, const string& element_
 		return 0;
 	}
 
-	// Normalize both sequence and element to (a) be case-insensitive, (b) containing only forward slashes.
-	auto f_xlat = (list_type == LIST_TYPE::PATH
-				? __still_not_lambda__normalize_case_and_slash
-				: __still_not_lambda__normalize_case);
+	// Normalize both sequence and element to:
+	// a) be case-insensitive
+	// b) if PATH-type: contain only forward slashes
+	auto f_xlat = (flags & MATCH_TYPE::PATH
+				? __still_no_lambda__normalize_case_and_slash
+				: __still_no_lambda__normalize_case);
 	string sequence, element;
 	transform(sequence_in.begin(), sequence_in.end(), back_inserter(sequence), f_xlat);
 	transform(element_in.begin(), element_in.end(), back_inserter(element), f_xlat);	
-		
+
 DBG_(sequence);
 DBG_(element);
 
-	string::size_type seqlen = sequence.length();
-	string::size_type elemlen = element.length();
-	string::size_type seq_partstart_pos = pos;
-	string::size_type seq_partend_pos; // the char AFTER a part (i.e. a separator or EOS)
+	CHARPOS seqlen = sequence.length();
+	CHARPOS elemlen = element.length();
+
+	CHARPOS seq_partstart_pos = pos;
+	CHARPOS seq_partend_pos; // the char AFTER a part (i.e. a separator or EOS)
+
 	while (seq_partstart_pos < seqlen)
 	{
 		// Skip leading separators, in case we are sitting on any.
@@ -73,17 +88,17 @@ DBG_(element);
 		}
 		// Note: we may be standing at EOS now. If yes, let's make
 		// everything less complicated (and prone to off-by-one access 
-		// violations) by just escaping now...
+		// violations) by catapulting right now.
 		if (!sequence[seq_partstart_pos])
 			break;
 
 		// 'element' is found if the substring of 'sequence' from 'seq_partstart_pos'
 		// matches 'element', AND the next position is either ELEMENT_SEPARATOR, or EOS.
-		string::size_type seq_partend_pos = sequence.find(ELEMENT_SEPARATOR, seq_partstart_pos);
+		CHARPOS seq_partend_pos = sequence.find(ELEMENT_SEPARATOR, seq_partstart_pos);
 		if (seq_partend_pos == string::npos)
 		    seq_partend_pos = seqlen;
 
-		string part = sequence.substr(seq_partstart_pos, elemlen/*or as many left, is shorter*/);
+		string part = sequence.substr(seq_partstart_pos, seq_partend_pos - seq_partstart_pos);
 DBG_(part);
 		if (part == element) // found!
 		{
@@ -95,41 +110,85 @@ DBG_(part);
 
 	return string::npos; // not found
 }
-#ifdef TEST_FindListPart
-int main()
-{
-	char* sequence1 = "c:\\tmp;X:\\In;;;d:\\tools;;fakedummy;dummyfake;dummy";
 
-	DBG "--------------- Basic non-PATH...";
-	DBG_(sequence1);
-	DBG_(FindListPart(sequence1, "c:\\tmp", LIST_TYPE::NORMAL));
-	DBG_(FindListPart(sequence1, "x:\\in", LIST_TYPE::NORMAL));
-	DBG_(FindListPart(sequence1, "Dummy", LIST_TYPE::NORMAL));
-	DBG_(FindListPart(sequence1, "xxx", LIST_TYPE::NORMAL));
-	PAUSE
+#if defined(TEST_FindListPart)
 
-	DBG "--------------- Positioned non-PATH..";
-	DBG_(FindListPart(sequence1, "c:\\tmp", LIST_TYPE::NORMAL, 1));
-	DBG_(FindListPart(sequence1, "x:\\in", LIST_TYPE::NORMAL, 1));
-	DBG_(FindListPart(sequence1, "dummy", LIST_TYPE::NORMAL, 34));
-	DBG_(FindListPart(sequence1, "xxx", LIST_TYPE::NORMAL, 1));
-	PAUSE
-
-	DBG "--------------- PATH: Case and slash differences...\n";
-	DBG_(FindListPart(sequence1, "C:\\TMP", LIST_TYPE::PATH));
-	DBG_(FindListPart(sequence1, "C:/Tmp", LIST_TYPE::PATH));
-	DBG_(FindListPart(sequence1, "x:/IN", LIST_TYPE::PATH));
-	DBG_(FindListPart(sequence1, "DUMmy", LIST_TYPE::PATH));
-	DBG_(FindListPart(sequence1, "xXx", LIST_TYPE::PATH));
-	PAUSE
-
-	DBG "--------------- Compound element...\n";
-	char* sequence_compo1 = "c:\\tmp;X:\\In;;;d:\\tools;;fakedummy;dummyfake;dummy";
-	DBG_(sequence_compo1);
-	DBG_(FindListPart(sequence1, "fakedummy;dummyfake", LIST_TYPE::PATH));
-	DBG_(FindListPart(sequence1, "faked", LIST_TYPE::NORMAL));
-	PAUSE
-	
-	return 0;
+TEST_CASE("--------------- Sporadic crashes on MSVC", "[path-crash]") {
+	REQUIRE(FindListPart("123456", "123456_123456XXX", MATCH_TYPE::NORMAL) == string::npos);
+	REQUIRE(FindListPart("123456", "123456_123456XXX", MATCH_TYPE::PATH) == string::npos);
 }
+
+
+const char* sequence1 = "c:\\tmp;X:\\In;;;d:\\tools;;fakedummy;dummyfake;dummy";
+
+TEST_CASE("--------------- Basic non-PATH-type matching") {
+
+ SECTION("Only match whole list parts, not substrings") {
+	REQUIRE(FindListPart(sequence1, "dummy", MATCH_TYPE::NORMAL) == 45);
+ }
+ SECTION("Caseless matching") {
+	REQUIRE(FindListPart(sequence1, "Dummy", MATCH_TYPE::NORMAL) == 45);
+ }
+ SECTION("Item not to be found") {
+	REQUIRE(FindListPart(sequence1, "xxx", MATCH_TYPE::NORMAL) == string::npos);
+ }
+ SECTION("Paths with backslashes, to be found (concidentally)") {
+	REQUIRE(FindListPart(sequence1, "c:\\tmp", MATCH_TYPE::NORMAL) == 0);
+	REQUIRE(FindListPart(sequence1, "x:\\in",  MATCH_TYPE::NORMAL) == 7);
+ }
+ SECTION("Paths with forward slashes, NOT to be found") {
+	REQUIRE(FindListPart(sequence1, "c:/tmp", MATCH_TYPE::NORMAL) == string::npos);
+	REQUIRE(FindListPart(sequence1, "x:/in",  MATCH_TYPE::NORMAL) == string::npos);
+ }
+}
+
+TEST_CASE("--------------- Basic PATH-type matching") {
+
+ SECTION("Only match whole list parts, not substrings") {
+	REQUIRE(FindListPart(sequence1, "dummy", MATCH_TYPE::PATH) == 45);
+ }
+ SECTION("Caseless matching") {
+	REQUIRE(FindListPart(sequence1, "Dummy", MATCH_TYPE::PATH) == 45);
+ }
+ SECTION("Item not to be found") {
+	REQUIRE(FindListPart(sequence1, "xxx", MATCH_TYPE::PATH) == string::npos);
+ }
+ SECTION("Paths with backslashes, to be found") {
+	REQUIRE(FindListPart(sequence1, "c:\\tmp", MATCH_TYPE::PATH) == 0);
+	REQUIRE(FindListPart(sequence1, "x:\\in",  MATCH_TYPE::PATH) == 7);
+ }
+ SECTION("Paths with forward slashes, to be found") {
+	REQUIRE(FindListPart(sequence1, "c:/tmp", MATCH_TYPE::PATH) == 0);
+	REQUIRE(FindListPart(sequence1, "x:/in",  MATCH_TYPE::PATH) == 7);
+ }
+}
+
+TEST_CASE("--------------- Positioned non-PATH", "[hide]") {
+
+ SECTION(sequence1) {
+	DBG_(FindListPart(sequence1, "c:\\tmp", MATCH_TYPE::NORMAL, 1));
+	DBG_(FindListPart(sequence1, "x:\\in", MATCH_TYPE::NORMAL, 1));
+	DBG_(FindListPart(sequence1, "dummy", MATCH_TYPE::NORMAL, 34));
+	DBG_(FindListPart(sequence1, "xxx", MATCH_TYPE::NORMAL, 1));
+ }
+}
+
+TEST_CASE("--------------- PATH: Case and slash differences", "[hide]") {
+
+ SECTION(sequence1) {
+	DBG_(FindListPart(sequence1, "C:\\TMP", MATCH_TYPE::PATH));
+	DBG_(FindListPart(sequence1, "C:/Tmp", MATCH_TYPE::PATH));
+	DBG_(FindListPart(sequence1, "x:/IN", MATCH_TYPE::PATH));
+	DBG_(FindListPart(sequence1, "DUMmy", MATCH_TYPE::PATH));
+	DBG_(FindListPart(sequence1, "xXx", MATCH_TYPE::PATH));
+ }
+}
+
+TEST_CASE("--------------- Compound element", "[hide]") {
+ SECTION(sequence1) {
+	DBG_(FindListPart(sequence1, "fakedummy;dummyfake", MATCH_TYPE::PATH));
+	DBG_(FindListPart(sequence1, "faked", MATCH_TYPE::NORMAL));
+ }
+}
+
 #endif

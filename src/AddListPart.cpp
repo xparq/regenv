@@ -11,33 +11,36 @@ using namespace std;
 #include "FindListPart.cpp"
 #endif
 
-#include "ListPart.h"
+#include "ValueList.h"
 
 //#undef DBG_OFF
 #include "dbg.h"
+
+#ifdef TEST_FindListPart
+#	define CATCH_CONFIG_MAIN
+#endif
+#include "catch.hpp"
 
 
 // Add a substring to a ';'-sepadated list of substrings, if not yet there.
 // Prepending or appending according to ADD_MODE.
 // See FindListPart() for more details.
 enum ENUM_CLASS ADD_MODE { APPEND, PREPEND };
-string AddListPart(const string& sequence_in, const string& element_in, LIST_TYPE list_type = LIST_TYPE::PATH, ADD_MODE add_mode = ADD_MODE::APPEND)
+string AddListPart(const string& sequence_in, const string& element_in, MATCH_TYPE flags = MATCH_TYPE::PATH, ADD_MODE add_mode = ADD_MODE::APPEND)
 //!!FIXME: element itself can also be a sequence!
 {
 	if (element_in.empty()) {
 		return sequence_in;
 	}
-
 DBGMARK
 
-	if (FindListPart(sequence_in, element_in, list_type, 0) != string::npos)
+	if (FindListPart(sequence_in, element_in, flags) != string::npos)
 	{
 #ifdef TEST_AddListPart
 DBG "['", element_in, "' IS ALREADY THERE, NOT ADDING!]";
 #endif
 		return sequence_in;
 	}
-
 DBGMARK
 	
 	string result;
@@ -69,10 +72,10 @@ int main()
 
 	DBG "--------------- PREPEND...";
 	DBG_(sequence1);
-	DBG_(AddListPart(sequence1, "c:\\tmp", LIST_TYPE::PATH, ADD_MODE::PREPEND));
-	DBG_(AddListPart(sequence1, "x:\\in", LIST_TYPE::PATH, ADD_MODE::PREPEND));
-	DBG_(AddListPart(sequence1, "dummy", LIST_TYPE::PATH, ADD_MODE::PREPEND));
-	DBG_(AddListPart(sequence1, "xxx", LIST_TYPE::PATH, ADD_MODE::PREPEND));
+	DBG_(AddListPart(sequence1, "c:\\tmp", MATCH_TYPE::PATH, ADD_MODE::PREPEND));
+	DBG_(AddListPart(sequence1, "x:\\in", MATCH_TYPE::PATH, ADD_MODE::PREPEND));
+	DBG_(AddListPart(sequence1, "dummy", MATCH_TYPE::PATH, ADD_MODE::PREPEND));
+	DBG_(AddListPart(sequence1, "xxx", MATCH_TYPE::PATH, ADD_MODE::PREPEND));
 	PAUSE
 
 	DBG "--------------- APPEND 2...";

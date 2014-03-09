@@ -3,17 +3,25 @@
 // Copyright (C) 2012-2014 - Szabolcs Szasz
 // See README for more details, e.g. change history and licensing.
 
+#define PRODUCT_NAME "regenv"
+#define PRODUCT_VERSION "0.96"
+
+// warning C4482: nonstandard extension used: enum '...' used in qualified name
+#pragma warning(disable : 4482)
+
 #define WIN32_LEAN_AND_MEAN
 #define VC_EXTRALEAN
 #include <windows.h>
 #include <tchar.h>	// _T()
 
 #include <iostream>
-#include <string>
+#include <string>	// also for wstring
 using namespace std;
 
 // This is only effective before the first include of dbg.h
+#ifndef DEBUG
 #define DBG_OFF
+#endif
 
 // Merge in some code
 // (...which is fairly generic and should be modularized further out)
@@ -24,7 +32,7 @@ using namespace std;
 // Some more includes...
 #include <set>
 #include <map>
-#include "winreg.h"
+#include "stupid_winreg.h"
 
 #include "dbg.h"
 
@@ -36,8 +44,8 @@ template <typename CHARTYPE> struct autostream : public ostream
 autostream<char> out;
 !!*/
 
-// Just a convenience helper (could be a derived class of set<char>, but not now...):
-#define OPTION(optchar)     (options.find(optchar) != options.end())
+// Convenience helpers:
+#define OPTION(optchar)    (options.find(optchar) != options.end())
 #define NO_OPTION(optchar) (options.find(optchar) == options.end())
 
 
@@ -53,22 +61,24 @@ const int RETURN_ACCESS_DENIED = 5;
 //---------------------------------------------------------------------------
 // Registry locations for the env. variables...
 //
-struct regkey { HKEY rootkey; TCHAR* path; };
+struct regkey { HKEY rootkey; const TCHAR* path; };
 // System variables
 const regkey REG_ENV_SYSTEM = { HKEY_LOCAL_MACHINE, _T("SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment") };
 // User variables
 const regkey REG_ENV_USER   = { HKEY_CURRENT_USER, _T("Environment") };
 // Session variables
-const regkey REG_ENV_SESSION = { HKEY_CURRENT_USER, _T("Volatile Environment") };
+const regkey REG_ENV_SESSION = { HKEY_CURRENT_USER,  _T("Volatile Environment") };
 
 
 //---------------------------------------------------------------------------
-#include "helptext.h"
-
 void ShowBanner()
 {
-	cout << _T("REGENV 0.95 - Copyright (C) 2012-2014 Szabolcs Szasz, 2005-2008 Jonathan Wilkes\n\n");
+	cout << _T(PRODUCT_NAME " " PRODUCT_VERSION 
+			" - Copyright (C) 2012-2014 Szabolcs Szasz, 2005-2008 Jonathan Wilkes\n\n");
 }
+
+
+#include "helptext.c"
 
 // Do not call this automatically in case of user errors, because
 // it writes to stdout (assuming explicit user request), not stderr!
@@ -125,7 +135,7 @@ DBG "GO TO DIRECT SET, AS REQUESTED...";
 	// 3. Handle substring mode differently:
 	if (OPTION('s')) {
 DBG "UPDATING EXISTING LIST VAR...";
-	value = AddListPart(regkey.current_value, value, LIST_TYPE::PATH, 
+	value = AddListPart(regkey.current_value, value, MATCH_TYPE::PATH, 
 			OPTION('p') ? ADD_MODE::PREPEND : ADD_MODE::APPEND);
 
 	} else {
@@ -187,7 +197,7 @@ DBG "DELETING FROM EXISTING LIST VAR...";
 			return RETURN_ERROR;
 		}
 
-		value = DelListPart(regkey.current_value, value, LIST_TYPE::PATH);
+		value = DelListPart(regkey.current_value, value, MATCH_TYPE::PATH);
 		
 DBG "UPDATING '", varname, "' TO '", value, "' in '", envspace.path, "' AS ",
     (OPTION('x') ? REG_EXPAND_SZ : 0/*use default*/);

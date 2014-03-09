@@ -1,19 +1,10 @@
 TODO:
 =====
 
-! Make "notify Windows" the default behavior (I myself regularly forget to 
+<1.0:
+! The 'check' action, -r, -i and -d are not implemented yet!
+? Make "notify Windows" the default behavior (I myself regularly forget to 
   do it explicitly, not understanding then why winenv "does not work"...)
-
-< 1.0:
-! [path-crash]
-  FIX a crash when doing `winenv -nUV set CRAP poo%CRAP%` and/or then winenv -s CRAP
-  - When %SZ_SYS_TOOLS_DIR%\winenv -nUV set PATH C:\sz\core\sw\live\_HOST_\Windows\XP;%PATH%
-    was commented out in user-init.cmd, the each subsequent winenv -s PATH calls crashed. 
-  - When NOT commented out, only this call crashed, but not the -s ones.
-  - Doing `winenv -nUV set CRAP poo%NOT_CRAP%` also didn't crash.
-  ? PATH growing off some fixed buffer? Seems to be an overflow, as the new 
-    value is 519 bytes...
-
 ! Update option names according to the /? spec.
 ! Merge -d into -s!
 ! Implement the 'check' action.
@@ -27,35 +18,42 @@ TODO:
 ! Add & refine examples.
 
 Later:
-! Add automatic version tag to the executable.
-
+- Add automatic version tag to the executable.
+- Add a proper manifest resource (as in SetEnv).
 - Devenv: add command "set_compiler" for VC/GCC switching. 
   1. This command should just instruct setting the tool name in the custom
   section of PROJECT.ini.
   2. The other commands (build, run, test etc.) should use this env. var
   accordingly.
   3. Standardize the compiler name tags?...
-
 - Del needs an option to delete plain substring, like SET has adding
   plain substring... This whole substring crap is crying for regexp!
-
 - Although there is -x to force REG_EXPAND_SZ, there is no option for 
   the reverse change (from REG_EXPAND_SZ to REG_SZ).
   (The variable must be deleted first, and then setting it again without
   -x will (re()create it as REG_SZ (by default).)
-
 - Add GPL2 to WinEnv-LICENSE.txt.
-
 - Revamp the ANSI/UNICODE crap (wcout, TCHAR, _T, LPSTR, LPBYTE etc.).
   (I messed it all up for my initial version just to quickly get rid of the
   original Xfc (output) module.)
   Could the tool be completely orthogonal to this whole encoding problem?
-
 - Itertion support for -l.
 
 
 DONE:
 =====
+
+2014-03-09
+* [path-crash] - It has nothing to do with the PATH, actually.
+  FIX a crash when doing `winenv -nUV set CRAP poo%CRAP%` and/or then winenv -s CRAP
+  - When %SZ_SYS_TOOLS_DIR%\winenv -nUV set PATH C:\sz\core\sw\live\_HOST_\Windows\XP;%PATH%
+    was commented out in user-init.cmd, the each subsequent winenv -s PATH calls crashed. 
+  - When NOT commented out, only this call crashed, but not the -s ones.
+  - Doing `winenv -nUV set CRAP poo%NOT_CRAP%` also didn't crash.
+  ? PATH growing off some fixed buffer? Seems to be an overflow, as the new 
+    value is 519 bytes...
+  -> The problem was a cool typo in the Registry handling:
+     `new TCHAR[size] + 1` instead of `new TCHAR[size + 1]`...
 
 2014-02-19: 
 . Renamed local ref to the remote Github repo from "origin" to "github".
@@ -94,7 +92,7 @@ DONE:
 . Added ListPart.h with the common decls. for the XxxListPart modules;
   also renamed PATH_SEPARATOR (';') to ELEMENT_SEPARATOR (as PATH_SEPARATOR
   could be confused with the '/' separators in paths...).
-. Fix the MAX_PATH(?) overrun... To reproduce the error (NOT ALWAYS POSSIBLE!): 
+. [path-crash] Fix the MAX_PATH(?) overrun. To reproduce it (NOT ALWAYS POSSIBLE!): 
   1.) Open the Startup folder in Explor and punch Enter on the init.cmd icon 5 times.
   3.) DBG showed "regkey.CheckValue_STR() --> status = 0", just before
    "UPDATING EXISTING LIST VAR..." and then the crash.

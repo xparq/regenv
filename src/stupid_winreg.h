@@ -1,39 +1,48 @@
 #include <windows.h>
 #include "dbg.h"
 
+// This check is probably unsafe (incomplete). E.g. MSVC links fine, 
+// but GCC does not, even though it used to do so... Now I get 
+// "The procedure entry point RegGetValueA could not be locaed  
+// in the dynamic link library ADVAPI32.dll."
+// Here RegGetValue is said to be only available on Windows XP 64-bit:
+// http://social.msdn.microsoft.com/Forums/vstudio/en-US/910a0e22-42bf-437d-8f5b-0162cc691f89/the-procedure-entry-point-reggetvaluea-could-not-be-located-in-advapi32dll?forum=vcgeneral
+// But it's obviously not true in my case, where I seem to have 
+// it on my 32-bit XP, when compiling with MSVC. (And with a MinGW
+// version, too.)
+//#if 1
 #if (_WIN32_IE < 0x0602)
-#define NO_REGGETVALUE 1
+#	define NO_REGGETVALUE 1
 #else // Win2003 & up (?)
 //for Vista: #include <Shlwapi.h>	// SHRegGetValue + SRRF_... consts
+#error Not sure I know what platform this is; delete this messsage to proceed!
 #endif
 
 
 //
 // For single-threaded use only!
-//
-// Also, this class is a state-machine, so method calls are neither 
-// orthogonal nor idempotent!
+// It's API has STL strings, while internally it uses LP[C]TSTR.
+// Methods are neither orthogonal nor idempotent!
 //
 class StupidRegKey
 {
 public:
 	LONG status; // Windows error code
 	
-	HKEY  hkey;// = NULL;
-	DWORD type;// = 0, 
-	DWORD size;// = 0;
-	char* current_value;// = NULL; //!!FIX: add UNICODE support!
+	HKEY  hkey;
+	DWORD type;
+	DWORD size;
+	LPTSTR current_value;
 
 	//-------------------------------------------------------------------
-	StupidRegKey(HKEY rootkey = NULL, string path = NULL) : status(ERROR) {
-		
-		hkey = NULL;
-		type = REG_SZ, 
-		size = 0;
-		current_value = NULL;
-		
+	StupidRegKey(HKEY rootkey = NULL, string path = NULL) : 
+		status		(ERROR),
+		hkey		(NULL),
+		type		(REG_SZ), 
+		size		(0),
+		current_value	(NULL)
+	{
 		status = ERROR_SUCCESS;
-
 		if (rootkey) Open(rootkey, path);
 	}
 
@@ -83,7 +92,7 @@ DBG "[NO_REGGETVALUE] TYPE after RegQueryValueEx: ", type;
 	void GetValue_STR(string valuename) {
 		if (status != ERROR_SUCCESS) return;		
 
-		current_value = new char[size] + 1; // http://msdn.microsoft.com/en-us/library/windows/desktop/ms724911(v=vs.85).aspx
+		current_value = new TCHAR[size + 1]; // http://msdn.microsoft.com/en-us/library/windows/desktop/ms724911(v=vs.85).aspx
 #ifdef NO_REGGETVALUE
 		status = RegQueryValueEx(hkey, valuename.c_str(), NULL, NULL, (LPBYTE)current_value, &size);
 		current_value[size] = '\0'; // http://msdn.microsoft.com/en-us/library/windows/desktop/ms724911(v=vs.85).aspx
