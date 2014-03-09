@@ -16,3 +16,6 @@
 
 # Debug databases
 *.pdb
+
+# Other
+/test/*.exe
