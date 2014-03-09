@@ -73,7 +73,7 @@ const char* HELP_TEXT
 "	- The 'set' action will create the variable, if needed.\n"
 "\n"
 "!!!NOTE NOTE NOTE NOTE NOTE!!!\n"
-"   - The 'check' action, -r, -i and -d are not implemented yet!\n"
+"   - The 'check' action, -r, -c and -d are not implemented yet!\n"
 "!!!NOTE NOTE NOTE NOTE NOTE!!!\n"
 );
 

@@ -46,7 +46,8 @@ Later:
 DONE:
 =====
 
-2014-03-09
+2014-03-09 - 0.97
+* Lots of minor (mostly docs and devenv) changes.
 * [path-crash] - It has nothing to do with the PATH, actually.
   FIX a crash when doing `winenv -nUV set CRAP poo%CRAP%` and/or then winenv -s CRAP
   - When %SZ_SYS_TOOLS_DIR%\winenv -nUV set PATH C:\sz\core\sw\live\_HOST_\Windows\XP;%PATH%
@@ -58,7 +59,7 @@ DONE:
   -> The problem was a cool typo in the Registry handling:
      `new TCHAR[size] + 1` instead of `new TCHAR[size + 1]`...
 
-2014-02-19: 
+2014-02-19:
 . Renamed local ref to the remote Github repo from "origin" to "github".
   ! But something is wrong: local repo is "ahead of github by 1 commit",
     yet i cannot push or merge upstream (everything is up to date!).

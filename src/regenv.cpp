@@ -4,7 +4,7 @@
 // See README for more details, e.g. change history and licensing.
 
 #define PRODUCT_NAME "regenv"
-#define PRODUCT_VERSION "0.96"
+#define PRODUCT_VERSION "0.97"
 
 // warning C4482: nonstandard extension used: enum '...' used in qualified name
 #pragma warning(disable : 4482)
