@@ -3,11 +3,11 @@
 	RegEnv LICENSE
 	--------------
 
-	RegEnv (then called "WinEnv") was originally an update of the 
-	SetEnv tool released by	Jonathan Wilkes. SetEnv version 1.08 
-	was used as the starting point of this work. His sources have 
-	"Copyright (C) 2005-2008 Jonathan Wilkes - All Rights Reserved", 
-	according to the details in SetEnv-1.08-LICENSE.txt.
+	RegEnv was originally an update of the SetEnv tool released by
+	Jonathan Wilkes. SetEnv version 1.08 was used as the starting 
+	point of this work. His sources have "Copyright (C) 2005-2008 
+	Jonathan Wilkes - All Rights Reserved", according to the details 
+	in SetEnv-1.08-LICENSE.txt.
 	
 	Eventually, however, practically all of the original concept and 
 	code got replaced by my own work, which effectively required a new 
@@ -23,3 +23,5 @@
 		  (CC BY-SA, https://creativecommons.org/licenses/by-sa/4.0/)
 		- and SetEnv-1.08-LICENSE.txt.
 
+	(OK, to decipher the above: if you find places where RegEnv still
+	looks like Setenv, it belongs to Jonathan, and the rest to me.)
