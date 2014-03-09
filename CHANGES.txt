@@ -18,6 +18,9 @@ TODO:
 ! Add & refine examples.
 
 Later:
+- Multi-byte string support! Conversions etc.:
+  http://stackoverflow.com/a/27296/1479945
+  http://msdn.microsoft.com/en-us/library/wt3s3k55.aspx
 - Add automatic version tag to the executable.
 - Add a proper manifest resource (as in SetEnv).
 - Devenv: add command "set_compiler" for VC/GCC switching. 
