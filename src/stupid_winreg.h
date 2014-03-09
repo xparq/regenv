@@ -21,30 +21,28 @@
 
 //
 // For single-threaded use only!
-//
-// Also, this class is a state-machine, so method calls are neither 
-// orthogonal nor idempotent!
+// It's API has STL strings, while internally it uses LP[C]TSTR.
+// Methods are neither orthogonal nor idempotent!
 //
 class StupidRegKey
 {
 public:
 	LONG status; // Windows error code
 	
-	HKEY  hkey;// = NULL;
-	DWORD type;// = 0, 
-	DWORD size;// = 0;
-	char* current_value;// = NULL; //!!FIX: add UNICODE support!
+	HKEY  hkey;
+	DWORD type;
+	DWORD size;
+	LPTSTR current_value;
 
 	//-------------------------------------------------------------------
-	StupidRegKey(HKEY rootkey = NULL, string path = NULL) : status(ERROR) {
-		
-		hkey = NULL;
-		type = REG_SZ, 
-		size = 0;
-		current_value = NULL;
-		
+	StupidRegKey(HKEY rootkey = NULL, string path = NULL) : 
+		status		(ERROR),
+		hkey		(NULL),
+		type		(REG_SZ), 
+		size		(0),
+		current_value	(NULL)
+	{
 		status = ERROR_SUCCESS;
-
 		if (rootkey) Open(rootkey, path);
 	}
 
@@ -94,7 +92,7 @@ DBG "[NO_REGGETVALUE] TYPE after RegQueryValueEx: ", type;
 	void GetValue_STR(string valuename) {
 		if (status != ERROR_SUCCESS) return;		
 
-		current_value = new char[size] + 1; // http://msdn.microsoft.com/en-us/library/windows/desktop/ms724911(v=vs.85).aspx
+		current_value = new TCHAR[size + 1]; // http://msdn.microsoft.com/en-us/library/windows/desktop/ms724911(v=vs.85).aspx
 #ifdef NO_REGGETVALUE
 		status = RegQueryValueEx(hkey, valuename.c_str(), NULL, NULL, (LPBYTE)current_value, &size);
 		current_value[size] = '\0'; // http://msdn.microsoft.com/en-us/library/windows/desktop/ms724911(v=vs.85).aspx

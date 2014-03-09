@@ -11,6 +11,8 @@ using namespace std;
 
 #include "ValueList.h"
 
+//!!NOTE: As this file is currently just #included directly into regenv.cpp, 
+//!!      setting this flag here would interfere with the one set there!
 //#undef DBG_OFF
 #include "dbg.h"
 
@@ -24,7 +26,7 @@ using namespace std;
 char __still_no_lambda__normalize_case(char c) { return ::tolower(c); }	
 char __still_no_lambda__normalize_case_and_slash(char c) { return (c == '\\' ? '/' : ::tolower(c)); }	
 
-CHARPOS FindListPart(const string& sequence_in, const string& element_in, MATCH_TYPE flags = MATCH_TYPE::PATH, CHARPOS pos = 0)
+CHARPOS FindListPart(const string sequence_in, const string element_in, MATCH_TYPE flags = MATCH_TYPE::PATH, CHARPOS pos = 0)
 // Find 'element' in a ';'-sepadated 'sequence' of elements (substrings), starting 
 // from 'pos', and return its offset if found, else string::npos.
 //
@@ -68,7 +70,7 @@ CHARPOS FindListPart(const string& sequence_in, const string& element_in, MATCH_
 	string sequence, element;
 	transform(sequence_in.begin(), sequence_in.end(), back_inserter(sequence), f_xlat);
 	transform(element_in.begin(), element_in.end(), back_inserter(element), f_xlat);	
-		
+
 DBG_(sequence);
 DBG_(element);
 
@@ -77,6 +79,7 @@ DBG_(element);
 
 	CHARPOS seq_partstart_pos = pos;
 	CHARPOS seq_partend_pos; // the char AFTER a part (i.e. a separator or EOS)
+
 	while (seq_partstart_pos < seqlen)
 	{
 		// Skip leading separators, in case we are sitting on any.

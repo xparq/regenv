@@ -32,7 +32,6 @@ string AddListPart(const string& sequence_in, const string& element_in, MATCH_TY
 	if (element_in.empty()) {
 		return sequence_in;
 	}
-
 DBGMARK
 
 	if (FindListPart(sequence_in, element_in, flags) != string::npos)
@@ -42,7 +41,6 @@ DBG "['", element_in, "' IS ALREADY THERE, NOT ADDING!]";
 #endif
 		return sequence_in;
 	}
-
 DBGMARK
 	
 	string result;

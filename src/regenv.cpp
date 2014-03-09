@@ -3,7 +3,10 @@
 // Copyright (C) 2012-2014 - Szabolcs Szasz
 // See README for more details, e.g. change history and licensing.
 
-// warning C4482: nonstandard extension used: enum 'xxx' used in qualified name
+#define PRODUCT_NAME "regenv"
+#define PRODUCT_VERSION "0.96"
+
+// warning C4482: nonstandard extension used: enum '...' used in qualified name
 #pragma warning(disable : 4482)
 
 #define WIN32_LEAN_AND_MEAN
@@ -12,11 +15,13 @@
 #include <tchar.h>	// _T()
 
 #include <iostream>
-#include <string>
+#include <string>	// also for wstring
 using namespace std;
 
 // This is only effective before the first include of dbg.h
+#ifndef DEBUG
 #define DBG_OFF
+#endif
 
 // Merge in some code
 // (...which is fairly generic and should be modularized further out)
@@ -39,8 +44,8 @@ template <typename CHARTYPE> struct autostream : public ostream
 autostream<char> out;
 !!*/
 
-// Just a convenience helper (could be a derived class of set<char>, but not now...):
-#define OPTION(optchar)     (options.find(optchar) != options.end())
+// Convenience helpers:
+#define OPTION(optchar)    (options.find(optchar) != options.end())
 #define NO_OPTION(optchar) (options.find(optchar) == options.end())
 
 
@@ -62,16 +67,18 @@ const regkey REG_ENV_SYSTEM = { HKEY_LOCAL_MACHINE, _T("SYSTEM\\CurrentControlSe
 // User variables
 const regkey REG_ENV_USER   = { HKEY_CURRENT_USER, _T("Environment") };
 // Session variables
-const regkey REG_ENV_SESSION = { HKEY_CURRENT_USER, _T("Volatile Environment") };
+const regkey REG_ENV_SESSION = { HKEY_CURRENT_USER,  _T("Volatile Environment") };
 
 
 //---------------------------------------------------------------------------
-#include "helptext.h"
-
 void ShowBanner()
 {
-	cout << _T("REGENV 0.95 - Copyright (C) 2012-2014 Szabolcs Szasz, 2005-2008 Jonathan Wilkes\n\n");
+	cout << _T(PRODUCT_NAME " " PRODUCT_VERSION 
+			" - Copyright (C) 2012-2014 Szabolcs Szasz, 2005-2008 Jonathan Wilkes\n\n");
 }
+
+
+#include "helptext.c"
 
 // Do not call this automatically in case of user errors, because
 // it writes to stdout (assuming explicit user request), not stderr!
