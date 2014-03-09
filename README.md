@@ -7,10 +7,11 @@ you can just grab it and run! ;-o
 
 Developers:
 
-* The stuff currently compiles with Visual Studio C++ 2010 and MinGW/GCC 4.7.
-
 * See [CHANGES.txt](CHANGES.txt) for pending/finished issues.
 
-* The stuff under .prj is a crude Windows project scaffolding kit I use locally.
+* The .exe currently compiles with Visual Studio C++ 2010 and MinGW/GCC 4.7.
+
+* The stuff under .prj is a crude dev. project scaffolding kit I use locally _(implemented almost exclusively in the ridiculous
+  CMD.EXE scripting language, worth a look for a free horror ride)_.
   The `prj.cmd`, `shell.cmd` and `save.cmd` convenience shortcuts are also part of it.
-  You can safely ignore it.
+  You can safely ignore them all.
