@@ -4,13 +4,13 @@ TODO:
 <1.0:
 ! The 'check' action, -r, -i and -d are not implemented yet!
 ? Make "notify Windows" the default behavior (I myself regularly forget to 
-  do it explicitly, not understanding then why winenv "does not work"...)
+  do it explicitly, not understanding then why regenv "does not work"...)
 ! Update option names according to the /? spec.
 ! Merge -d into -s!
 ! Implement the 'check' action.
 ! Implement the 'show' action. (Is it actually different from a "get"?)
 ! Add a 'get' action, too, for completeness. (Even if doesn't make too much sense,
-  it's easier for those who see winenv -? for the first time. Also, it does make
+  it's easier for those who see regenv -? for the first time. And it does make
   sense for seeing how the variables actually look like in the registry.)
 ! Factor out all the Win dependencies into a separate module.
 ! Rething the -l -a -p options and SET/DEL/CHECK logic for more explicit 
