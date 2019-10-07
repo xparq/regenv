@@ -18,6 +18,7 @@ TODO:
 ! Add & refine examples.
 
 Later:
+- Check out the old stuff in "_in"!
 - Multi-byte string support! Conversions etc.:
   http://stackoverflow.com/a/27296/1479945
   http://msdn.microsoft.com/en-us/library/wt3s3k55.aspx

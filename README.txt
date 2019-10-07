@@ -6,6 +6,7 @@ Copyright (C) 2012-2014 Szabolcs Szasz. Some rights reserved.
 Parts copyright (C) 2005-2008 Jonathan Wilkes.
 See LICENSE.txt for copyright details.
 See CHANGES.txt for version/status.
+Master repo: http://github.com/lunakid/regenv
 
 ================================================================================
 

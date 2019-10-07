@@ -4,6 +4,8 @@
 *.o
 *.obj
 *.ilk
+*.old
+*.tmp
 
 # Compiled Dynamic libraries
 *.so
@@ -19,3 +21,4 @@
 
 # Other
 /test/*.exe
+_in/tmp/
